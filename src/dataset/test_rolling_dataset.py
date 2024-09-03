@@ -1,3 +1,5 @@
+# Last modified: 2024-02-08
+#
 # Copyright 2023 Bingxin Ke, ETH Zurich. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,9 +16,25 @@
 # --------------------------------------------------------------------------
 # If you find this code useful, we kindly ask you to cite our paper in your work.
 # Please find bibtex at: https://github.com/prs-eth/Marigold#-citation
+# If you use or adapt this code, please attribute to https://github.com/prs-eth/marigold.
 # More information about the method can be found at https://marigoldmonodepth.github.io
 # --------------------------------------------------------------------------
 
+import torch
 
-from .marigold_pipeline import MarigoldPipeline, MarigoldDepthOutput  # noqa: F401
-from .derolling_pipeline import MarigoldRGBPipeline, MarigoldRGBOutput
+from .base_rgb_dataset import BaseRGBDataset, DepthFileNameMode
+
+
+class TestRollingDataset(BaseRGBDataset):
+    def __init__(
+        self,
+        **kwargs,
+    ) -> None:
+        super().__init__(
+            name_mode=DepthFileNameMode.id,
+            **kwargs,
+        )
+        # Filter out empty depth
+        # self.filenames = [f for f in self.filenames if "None" != f[1]]
+
+

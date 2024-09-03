@@ -23,6 +23,7 @@
 import os
 
 from .base_depth_dataset import BaseDepthDataset, get_pred_name, DatasetMode  # noqa: F401
+from .base_rgb_dataset import BaseRGBDataset
 from .diode_dataset import DIODEDataset
 from .eth3d_dataset import ETH3DDataset
 from .hypersim_dataset import HypersimDataset
@@ -30,6 +31,7 @@ from .kitti_dataset import KITTIDataset
 from .nyu_dataset import NYUDataset
 from .scannet_dataset import ScanNetDataset
 from .vkitti_dataset import VirtualKITTIDataset
+from .test_rolling_dataset import TestRollingDataset
 
 
 dataset_name_class_dict = {
@@ -40,12 +42,13 @@ dataset_name_class_dict = {
     "eth3d": ETH3DDataset,
     "diode": DIODEDataset,
     "scannet": ScanNetDataset,
+    "deroll": TestRollingDataset,
 }
 
 
 def get_dataset(
     cfg_data_split, base_data_dir: str, mode: DatasetMode, **kwargs
-) -> BaseDepthDataset:
+) -> BaseRGBDataset:
     if "mixed" == cfg_data_split.name:
         assert DatasetMode.TRAIN == mode, "Only training mode supports mixed datasets."
         dataset_ls = [

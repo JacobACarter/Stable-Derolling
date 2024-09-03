@@ -1,5 +1,5 @@
 # An official reimplemented version of Marigold training script.
-# Last modified: 2024-08-16
+# Last modified: 2024-04-29
 #
 # Copyright 2023 Bingxin Ke, ETH Zurich. All rights reserved.
 #
@@ -40,7 +40,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from PIL import Image
 
-from marigold.marigold_pipeline import MarigoldPipeline, MarigoldDepthOutput
+from marigold.derolling_pipeline import MarigoldRGBPipeline, MarigoldRGBOutput
 from src.util import metric
 from src.util.data_loader import skip_first_batches
 from src.util.logging_util import tb_logger, eval_dic_to_text
@@ -52,11 +52,11 @@ from src.util.alignment import align_depth_least_square
 from src.util.seeding import generate_seed_sequence
 
 
-class MarigoldTrainer:
+class MarigoldRGBTrainer:
     def __init__(
         self,
         cfg: OmegaConf,
-        model: MarigoldPipeline,
+        model: MarigoldRGBPipeline,
         train_dataloader: DataLoader,
         device,
         base_ckpt_dir,
@@ -68,7 +68,7 @@ class MarigoldTrainer:
         vis_dataloaders: List[DataLoader] = None,
     ):
         self.cfg: OmegaConf = cfg
-        self.model: MarigoldPipeline = model
+        self.model: MarigoldRGBPipeline = model
         self.device = device
         self.seed: Union[int, None] = (
             self.cfg.trainer.init_seed
@@ -143,8 +143,6 @@ class MarigoldTrainer:
         self.max_epoch = self.cfg.max_epoch
         self.max_iter = self.cfg.max_iter
         self.gradient_accumulation_steps = accumulation_steps
-        self.gt_depth_type = self.cfg.gt_depth_type
-        self.gt_mask_type = self.cfg.gt_mask_type
         self.save_period = self.cfg.trainer.save_period
         self.backup_period = self.cfg.trainer.backup_period
         self.val_period = self.cfg.trainer.validation_period
@@ -507,7 +505,7 @@ class MarigoldTrainer:
         ):
             assert 1 == data_loader.batch_size
             # Read input image
-            rgb_int = batch["rgb_int"]  # [B, 3, H, W]
+            rgb_int = batch["rgb_int"].squeeze()  # [3, H, W]
             # GT depth
             depth_raw_ts = batch["depth_raw_linear"].squeeze()
             depth_raw = depth_raw_ts.numpy()

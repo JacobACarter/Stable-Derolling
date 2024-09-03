@@ -85,7 +85,7 @@ def ensemble_depth(
         A tensor of aligned and ensembled depth maps and optionally a tensor of uncertainties of the same shape:
         `(1, 1, H, W)`.
     """
-    if depth.dim() != 4 or depth.shape[1] != 1:
+    if depth.dim() != 4 or (depth.shape[1] != 1 and depth.shape[1] != 3):
         raise ValueError(f"Expecting 4D tensor of shape [B,1,H,W]; got {depth.shape}.")
     if reduction not in ("mean", "median"):
         raise ValueError(f"Unrecognized reduction method: {reduction}.")

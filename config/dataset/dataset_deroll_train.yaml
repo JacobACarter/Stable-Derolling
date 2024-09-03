@@ -1,0 +1,9 @@
+dataset:
+  train:
+    name: deroll
+    disp_name: deroll_train
+    dir: dataset-seq1.tar
+    filenames: data_split/rolling/rolling_train.txt
+    resize_to_hw:
+    - 480
+    - 640
