@@ -116,12 +116,12 @@ class BaseRGBDataset(Dataset):
         rasters = {}
 
         # RGB data
-        rasters.update(self._load_rgb_data(rgb_rel_path=global_rel_path))
+        rasters.update(self._load_rgb_data(global_rel_path, True))
 
         # Rolling data
 
         # load data
-        rolling_data = self._load_rgb_data(rgb_rel_path=rolling_rel_path)
+        rolling_data = self._load_rgb_data(rolling_rel_path, False)
         rasters.update(rolling_data)
 
 
@@ -129,15 +129,21 @@ class BaseRGBDataset(Dataset):
 
         return rasters, other
 
-    def _load_rgb_data(self, rgb_rel_path):
+    def _load_rgb_data(self, rgb_rel_path, rolling):
         # Read RGB data
         rgb = self._read_rgb_file(rgb_rel_path)
         rgb_norm = rgb / 255.0 * 2.0 - 1.0  #  [0, 255] -> [-1, 1]
+        if rolling:
 
-        outputs = {
-            "rgb_int": torch.from_numpy(rgb).int(),
-            "rgb_norm": torch.from_numpy(rgb_norm).float(),
-        }
+            outputs = {
+                "rolling_int": torch.from_numpy(rgb).int(),
+                "rolling_norm": torch.from_numpy(rgb_norm).float(),
+            }
+        else:
+            outputs = {
+                "global_int": torch.from_numpy(rgb).int(),
+                "global_norm": torch.from_numpy(rgb_norm).float(),
+            }
         return outputs
 
 
@@ -165,7 +171,6 @@ class BaseRGBDataset(Dataset):
 
     def _read_rgb_file(self, rel_path) -> np.ndarray:
         rgb = self._read_image(rel_path)
-        print(rgb.shape)
         rgb = np.transpose(rgb, (2, 0, 1)).astype(int)  # [rgb, H, W]
         return rgb
 

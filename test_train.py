@@ -260,7 +260,6 @@ if "__main__" == __name__:
     logging.debug("Augmentation: ", cfg.augmentation)
     if "mixed" == cfg_data.train.name:
         dataset_ls = train_dataset
-        print(len(dataset_ls))
         assert len(cfg_data.train.prob_ls) == len(
             dataset_ls
         ), "Lengths don't match: `prob_ls` and `dataset_list`"

@@ -219,27 +219,27 @@ class MarigoldRGBTrainer:
                 # >>> With gradient accumulation >>>
 
                 # Get data
-                rgb = batch["rgb_norm"].to(device)
-                depth_gt_for_latent = batch[self.gt_depth_type].to(device)
+                rolling = batch["rolling_norm"].to(device)
+                global_base = batch["global_norm"].to(device)
 
-                if self.gt_mask_type is not None:
-                    valid_mask_for_latent = batch[self.gt_mask_type].to(device)
-                    invalid_mask = ~valid_mask_for_latent
-                    valid_mask_down = ~torch.max_pool2d(
-                        invalid_mask.float(), 8, 8
-                    ).bool()
-                    valid_mask_down = valid_mask_down.repeat((1, 4, 1, 1))
-                else:
-                    raise NotImplementedError
+                # if self.gt_mask_type is not None:
+                #     valid_mask_for_latent = batch[self.gt_mask_type].to(device)
+                #     invalid_mask = ~valid_mask_for_latent
+                #     valid_mask_down = ~torch.max_pool2d(
+                #         invalid_mask.float(), 8, 8
+                #     ).bool()
+                #     valid_mask_down = valid_mask_down.repeat((1, 4, 1, 1))
+                # else:
+                #     raise NotImplementedError
 
-                batch_size = rgb.shape[0]
+                batch_size = rolling.shape[0]
 
                 with torch.no_grad():
                     # Encode image
-                    rgb_latent = self.model.encode_rgb(rgb)  # [B, 4, h, w]
+                    rolling_latent = self.model.encode_rgb(rolling)  # [B, 4, h, w]
                     # Encode GT depth
-                    gt_depth_latent = self.encode_depth(
-                        depth_gt_for_latent
+                    global_latent = self.encode_rgb(
+                        global_base
                     )  # [B, 4, h, w]
 
                 # Sample a random timestep for each image
@@ -258,7 +258,7 @@ class MarigoldRGBTrainer:
                         # calculate strength depending on t
                         strength = strength * (timesteps / self.scheduler_timesteps)
                     noise = multi_res_noise_like(
-                        gt_depth_latent,
+                        global_latent,
                         strength=strength,
                         downscale_strategy=self.mr_noise_downscale_strategy,
                         generator=rand_num_generator,
@@ -266,14 +266,14 @@ class MarigoldRGBTrainer:
                     )
                 else:
                     noise = torch.randn(
-                        gt_depth_latent.shape,
+                        global_latent.shape,
                         device=device,
                         generator=rand_num_generator,
                     )  # [B, 4, h, w]
 
                 # Add noise to the latents (diffusion forward process)
                 noisy_latents = self.training_noise_scheduler.add_noise(
-                    gt_depth_latent, noise, timesteps
+                    global_latent, noise, timesteps
                 )  # [B, 4, h, w]
 
                 # Text embedding
@@ -283,7 +283,7 @@ class MarigoldRGBTrainer:
 
                 # Concat rgb and depth latents
                 cat_latents = torch.cat(
-                    [rgb_latent, noisy_latents], dim=1
+                    [rolling_latent, noisy_latents], dim=1
                 )  # [B, 8, h, w]
                 cat_latents = cat_latents.float()
 
@@ -296,24 +296,24 @@ class MarigoldRGBTrainer:
 
                 # Get the target for loss depending on the prediction type
                 if "sample" == self.prediction_type:
-                    target = gt_depth_latent
+                    target = global_latent
                 elif "epsilon" == self.prediction_type:
                     target = noise
                 elif "v_prediction" == self.prediction_type:
                     target = self.training_noise_scheduler.get_velocity(
-                        gt_depth_latent, noise, timesteps
+                        global_latent, noise, timesteps
                     )  # [B, 4, h, w]
                 else:
                     raise ValueError(f"Unknown prediction type {self.prediction_type}")
 
                 # Masked latent loss
-                if self.gt_mask_type is not None:
-                    latent_loss = self.loss(
-                        model_pred[valid_mask_down].float(),
-                        target[valid_mask_down].float(),
-                    )
-                else:
-                    latent_loss = self.loss(model_pred.float(), target.float())
+                # if self.gt_mask_type is not None:
+                #     latent_loss = self.loss(
+                #         model_pred[valid_mask_down].float(),
+                #         target[valid_mask_down].float(),
+                #     )
+                # else:
+                latent_loss = self.loss(model_pred.float(), target.float())
 
                 loss = latent_loss.mean()
 
