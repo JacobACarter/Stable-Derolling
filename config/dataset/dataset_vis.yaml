@@ -9,7 +9,7 @@ dataset:
   #   - 640
   - name: deroll
     disp_name: deroll_vis
-    dir: dataset-seq1.tar
-    filenames: data_split/rolling/rolling_vis.txt
+    dir: fan.tar
+    filenames: data_split/fan/fan_vis.txt
 
   

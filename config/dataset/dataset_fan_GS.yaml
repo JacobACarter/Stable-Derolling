@@ -2,8 +2,8 @@ dataset:
   train:
     name: deroll
     disp_name: deroll_train
-    dir: fan.tar
-    filenames: data_split/fan/fan_train.txt
+    dir: ceiling_fan.tar
+    filenames: data_split/fan/ceiling_split_GS_train.txt
     resize_to_hw:
     - 480
     - 640

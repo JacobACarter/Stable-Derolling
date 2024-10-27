@@ -26,5 +26,5 @@ dataset:
 
   - name: deroll
     disp_name: deroll_val_small_80
-    dir: dataset-seq1.tar
-    filenames: data_split/rolling/rolling_val.txt
+    dir: fan.tar
+    filenames: data_split/fan/fan_val.txt

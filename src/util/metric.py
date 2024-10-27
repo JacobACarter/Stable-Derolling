@@ -111,7 +111,7 @@ def threshold_percentage(output, target, threshold_val, valid_mask=None):
     else:
         n = output.shape[-1] * output.shape[-2]
     count_mat = torch.sum(bit_mat, (-1, -2))
-    threshold_mat = count_mat / n.cpu()
+    threshold_mat = count_mat / n
     return threshold_mat.mean()
 
 

@@ -48,7 +48,7 @@ from src.util.loss import get_loss
 from src.util.lr_scheduler import IterExponential
 from src.util.metric import MetricTracker
 from src.util.multi_res_noise import multi_res_noise_like
-from src.util.alignment import align_depth_least_square
+from src.util.alignment import align_rgb_least_square
 from src.util.seeding import generate_seed_sequence
 
 
@@ -238,7 +238,7 @@ class MarigoldRGBTrainer:
                     # Encode image
                     rolling_latent = self.model.encode_rgb(rolling)  # [B, 4, h, w]
                     # Encode GT depth
-                    global_latent = self.encode_rgb(
+                    global_latent = self.model.encode_rgb(
                         global_base
                     )  # [B, 4, h, w]
 
@@ -505,14 +505,11 @@ class MarigoldRGBTrainer:
         ):
             assert 1 == data_loader.batch_size
             # Read input image
-            rgb_int = batch["rgb_int"].squeeze()  # [3, H, W]
+            rolling_int = batch["rolling_int"].squeeze()  # [3, H, W]
             # GT depth
-            depth_raw_ts = batch["depth_raw_linear"].squeeze()
-            depth_raw = depth_raw_ts.numpy()
-            depth_raw_ts = depth_raw_ts.to(self.device)
-            valid_mask_ts = batch["valid_mask_raw"].squeeze()
-            valid_mask = valid_mask_ts.numpy()
-            valid_mask_ts = valid_mask_ts.to(self.device)
+            global_int_ts = batch["global_int"].squeeze()
+            global_int = global_int_ts.numpy()
+            global_int_ts = global_int_ts.to(self.device)
 
             # Random number generator
             seed = val_seed_ls.pop()
@@ -523,8 +520,8 @@ class MarigoldRGBTrainer:
                 generator.manual_seed(seed)
 
             # Predict depth
-            pipe_out: MarigoldDepthOutput = self.model(
-                rgb_int,
+            pipe_out: MarigoldRGBOutput = self.model(
+                rolling_int,
                 denoising_steps=self.cfg.validation.denoising_steps,
                 ensemble_size=self.cfg.validation.ensemble_size,
                 processing_res=self.cfg.validation.processing_res,
@@ -536,45 +533,44 @@ class MarigoldRGBTrainer:
                 resample_method=self.cfg.validation.resample_method,
             )
 
-            depth_pred: np.ndarray = pipe_out.depth_np
+            global_pred: np.ndarray = pipe_out.global_np
 
-            if "least_square" == self.cfg.eval.alignment:
-                depth_pred, scale, shift = align_depth_least_square(
-                    gt_arr=depth_raw,
-                    pred_arr=depth_pred,
-                    valid_mask_arr=valid_mask,
-                    return_scale_shift=True,
-                    max_resolution=self.cfg.eval.align_max_res,
-                )
-            else:
-                raise RuntimeError(f"Unknown alignment type: {self.cfg.eval.alignment}")
+            # if "least_square" == self.cfg.eval.alignment:
+            #     global_pred, scale, shift = align_rgb_least_square(
+            #         gt_arr=global_int,
+            #         pred_arr=global_pred,
+            #         return_scale_shift=True,
+            #         max_resolution=self.cfg.eval.align_max_res,
+            #     )
+            # else:
+            #     raise RuntimeError(f"Unknown alignment type: {self.cfg.eval.alignment}")
 
-            # Clip to dataset min max
-            depth_pred = np.clip(
-                depth_pred,
-                a_min=data_loader.dataset.min_depth,
-                a_max=data_loader.dataset.max_depth,
-            )
+            # # Clip to dataset min max
+            # global_pred = np.clip(
+            #     global_pred,
+            #     a_min=data_loader.dataset.min_depth,
+            #     a_max=data_loader.dataset.max_depth,
+            # )
 
             # clip to d > 0 for evaluation
-            depth_pred = np.clip(depth_pred, a_min=1e-6, a_max=None)
+            global_pred = np.clip(global_pred, a_min=1e-6, a_max=None)
 
             # Evaluate
             sample_metric = []
-            depth_pred_ts = torch.from_numpy(depth_pred).to(self.device)
+            global_pred_ts = torch.from_numpy(global_pred).to(self.device)
 
             for met_func in self.metric_funcs:
                 _metric_name = met_func.__name__
-                _metric = met_func(depth_pred_ts, depth_raw_ts, valid_mask_ts).item()
+                _metric = met_func(global_pred_ts, global_int_ts, None).item()
                 sample_metric.append(_metric.__str__())
                 metric_tracker.update(_metric_name, _metric)
 
             # Save as 16-bit uint png
             if save_to_dir is not None:
-                img_name = batch["rgb_relative_path"][0].replace("/", "_")
+                img_name = batch["global_relative_path"][0].replace("/", "_")
                 png_save_path = os.path.join(save_to_dir, f"{img_name}.png")
-                depth_to_save = (pipe_out.depth_np * 65535.0).astype(np.uint16)
-                Image.fromarray(depth_to_save).save(png_save_path, mode="I;16")
+                global_to_save = (pipe_out.global_np * 65535.0).astype(np.uint16)
+                Image.fromarray(global_to_save).save(png_save_path, mode="I;16")
 
         return metric_tracker.result()
 

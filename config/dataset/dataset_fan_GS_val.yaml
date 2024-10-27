@@ -1,0 +1,6 @@
+dataset:
+  val:
+  - name: deroll
+    disp_name: deroll_val_small_80
+    dir: ceiling_fan.tar
+    filenames: data_split/fan/ceiling_split_GS_val.txt

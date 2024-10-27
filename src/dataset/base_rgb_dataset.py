@@ -160,6 +160,7 @@ class BaseRGBDataset(Dataset):
         if self.is_tar:
             if self.tar_obj is None:
                 self.tar_obj = tarfile.open(self.dataset_dir)
+            # print(self.tar_obj.members)
             image_to_read = self.tar_obj.extractfile(img_rel_path)
             image_to_read = image_to_read.read()
             image_to_read = io.BytesIO(image_to_read)
@@ -171,6 +172,12 @@ class BaseRGBDataset(Dataset):
 
     def _read_rgb_file(self, rel_path) -> np.ndarray:
         rgb = self._read_image(rel_path)
+        ##temp to convert greyscale to rgb
+        # w, h = grey.shape
+        # rgb = np.empty((w, h, 3), dtype=np.uint8)
+        # rgb[:, :, 0] = grey
+        # rgb[:, :, 1] = grey
+        # rgb[:, :, 2] = grey
         rgb = np.transpose(rgb, (2, 0, 1)).astype(int)  # [rgb, H, W]
         return rgb
 

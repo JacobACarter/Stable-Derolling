@@ -255,7 +255,7 @@ if "__main__" == __name__:
                 generator=generator,
             )
 
-            depth_pred: np.ndarray = pipe_out.depth_np
+            global_pred: np.ndarray = pipe_out.global_np
 
             # Save as npy
             rgb_name_base = os.path.splitext(os.path.basename(rgb_path))[0]
@@ -263,11 +263,11 @@ if "__main__" == __name__:
             npy_save_path = os.path.join(output_dir_npy, f"{pred_name_base}.npy")
             if os.path.exists(npy_save_path):
                 logging.warning(f"Existing file: '{npy_save_path}' will be overwritten")
-            np.save(npy_save_path, depth_pred)
+            np.save(npy_save_path, global_pred)
 
             # Save as 16-bit uint png
-            print("Pred SIze: " + str(depth_pred.shape))
-            depth_to_save = (depth_pred * 255).astype(np.uint8)
+            print("Pred SIze: " + str(global_pred.shape))
+            depth_to_save = (global_pred * 255).astype(np.uint8)
             png_save_path = os.path.join(output_dir_tif, f"{pred_name_base}.png")
             if os.path.exists(png_save_path):
                 logging.warning(f"Existing file: '{png_save_path}' will be overwritten")

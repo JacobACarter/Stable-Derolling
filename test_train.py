@@ -55,6 +55,7 @@ from src.util.logging_util import (
 from src.util.slurm_util import get_local_scratch_dir, is_on_slurm
 
 if "__main__" == __name__:
+
     t_start = datetime.now()
     print(f"start at {t_start}")
 
@@ -118,6 +119,12 @@ if "__main__" == __name__:
     )
 
     # -------------------- Initialization --------------------
+
+    #Set environmental variables
+    os.environ["BASE_DATA_DIR"] = "../rolling-shutter-data"
+    os.environ["BASE_CKPT_DIR"] = "../"
+    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
     # Resume previous run
     if resume_run is not None:
         print(f"Resume run: {resume_run}")
