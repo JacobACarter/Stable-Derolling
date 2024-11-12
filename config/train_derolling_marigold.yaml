@@ -2,7 +2,7 @@ base_config:
 - config/logging.yaml
 - config/wandb.yaml
 - config/dataset/dataset_deroll_train.yaml
-- config/dataset/dataset_val.yaml
+- config/dataset/dataset_deroll_val.yaml
 - config/dataset/dataset_vis.yaml
 - config/model_sdv2.yaml
 

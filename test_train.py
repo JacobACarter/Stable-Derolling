@@ -31,6 +31,7 @@ import torch
 from omegaconf import OmegaConf
 from torch.utils.data import ConcatDataset, DataLoader
 from tqdm import tqdm
+from torchvision.transforms import v2
 
 from marigold.derolling_pipeline import MarigoldRGBPipeline
 from src.dataset import BaseRGBDataset, DatasetMode, get_dataset
@@ -257,12 +258,17 @@ if "__main__" == __name__:
         loader_generator = torch.Generator().manual_seed(loader_seed)
 
     # Training dataset
+    transforms = v2.Compose([
+        v2.RandomResizedCrop(size=(224, 224), antialias=False),
+        v2.RandomHorizontalFlip(p=0.5),
+    ])
 
     train_dataset: BaseRGBDataset = get_dataset(
         cfg_data.train,
         base_data_dir=base_data_dir,
         mode=DatasetMode.TRAIN,
         augmentation_args=cfg.augmentation,
+        transform = transforms
     )
     logging.debug("Augmentation: ", cfg.augmentation)
     if "mixed" == cfg_data.train.name:
@@ -315,6 +321,7 @@ if "__main__" == __name__:
             _vis_dic,
             base_data_dir=base_data_dir,
             mode=DatasetMode.EVAL,
+            transform = transforms,
         )
         _vis_loader = DataLoader(
             dataset=_vis_dataset,

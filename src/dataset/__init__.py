@@ -43,6 +43,9 @@ dataset_name_class_dict = {
     "diode": DIODEDataset,
     "scannet": ScanNetDataset,
     "deroll": TestRollingDataset,
+    "plane": TestRollingDataset,
+    "fnaf_fan": TestRollingDataset,
+    "ceiling_fan":TestRollingDataset
 }
 
 
@@ -67,5 +70,4 @@ def get_dataset(
         )
     else:
         raise NotImplementedError
-
     return dataset

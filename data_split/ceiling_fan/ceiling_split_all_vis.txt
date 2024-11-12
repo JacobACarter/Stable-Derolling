@@ -1,0 +1,9 @@
+ceiling_fan/GS/0001.png ceiling_fan/GS/0001.png
+table_fan/RS0.05/0001.png table_fan/RS0.05/0001.png
+table_fan/RS0.075/0001.png table_fan/RS0.075/0001.png
+table_fan/RS0.1/0001.png table_fan/RS0.1/0001.png
+table_fan/RS0.15/0001.png table_fan/RS0.15/0001.png
+table_fan/RS0.2/0001.png table_fan/RS0.2/0001.png
+table_fan/RS0.3/0001.png table_fan/RS0.3/0001.png
+table_fan/RS0.4/0001.png table_fan/RS0.4/0001.png
+table_fan/RS0.5/0001.png table_fan/RS0.5/0001.png

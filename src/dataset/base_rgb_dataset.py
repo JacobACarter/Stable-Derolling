@@ -115,13 +115,13 @@ class BaseRGBDataset(Dataset):
 
         rasters = {}
 
-        # RGB data
-        rasters.update(self._load_rgb_data(global_rel_path, True))
+        # RGB data (Global Shutter)
+        rasters.update(self._load_rgb_data(global_rel_path, False))
 
         # Rolling data
 
-        # load data
-        rolling_data = self._load_rgb_data(rolling_rel_path, False)
+        # RGB Data (Rolling Shutter)
+        rolling_data = self._load_rgb_data(rolling_rel_path, True)
         rasters.update(rolling_data)
 
 
@@ -140,6 +140,7 @@ class BaseRGBDataset(Dataset):
                 "rolling_norm": torch.from_numpy(rgb_norm).float(),
             }
         else:
+            # print("Global: " + str(rgb_rel_path))
             outputs = {
                 "global_int": torch.from_numpy(rgb).int(),
                 "global_norm": torch.from_numpy(rgb_norm).float(),

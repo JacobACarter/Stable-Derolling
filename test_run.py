@@ -27,11 +27,33 @@ import numpy as np
 import torch
 from PIL import Image
 from tqdm.auto import tqdm
+from torch.nn import Conv2d
+from torch.nn.parameter import Parameter
 
 from marigold import MarigoldRGBPipeline
 
 EXTENSION_LIST = [".jpg", ".jpeg", ".png"]
 
+def _replace_unet_conv_in(model):
+    # replace the first layer to accept 8 in_channels
+    _weight = model.unet.conv_in.weight.clone()  # [320, 4, 3, 3]
+    _bias = model.unet.conv_in.bias.clone()  # [320]
+    _weight = _weight.repeat((1, 2, 1, 1))  # Keep selected channel(s)
+    # half the activation magnitude
+    _weight *= 0.5
+    # new conv_in channel
+    _n_convin_out_channel = model.unet.conv_in.out_channels
+    _new_conv_in = Conv2d(
+        8, _n_convin_out_channel, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)
+    )
+    _new_conv_in.weight = Parameter(_weight)
+    _new_conv_in.bias = Parameter(_bias)
+    model.unet.conv_in = _new_conv_in
+    logging.info("Unet conv_in layer is replaced")
+    # replace config
+    model.unet.config["in_channels"] = 8
+    logging.info("Unet config is updated")
+    return
 
 if "__main__" == __name__:
     logging.basicConfig(level=logging.INFO)
@@ -82,7 +104,7 @@ if "__main__" == __name__:
     parser.add_argument(
         "--processing_res",
         type=int,
-        default=None,
+        default=0,
         help="Maximum resolution of processing. 0 for using input image resolution. Default: 768.",
     )
     parser.add_argument(
@@ -124,6 +146,11 @@ if "__main__" == __name__:
         action="store_true",
         help="Flag of running on Apple Silicon.",
     )
+
+    os.environ["BASE_DATA_DIR"] = "../rolling-shutter-data"
+    os.environ["BASE_CKPT_DIR"] = "../"
+    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+    os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
     args = parser.parse_args()
 
@@ -203,8 +230,18 @@ if "__main__" == __name__:
         variant = None
 
     pipe: MarigoldRGBPipeline = MarigoldRGBPipeline.from_pretrained(
-        checkpoint_path, variant=variant, torch_dtype=dtype
+        "../stable-diffusion-2"
     )
+    if 8 != pipe.unet.config["in_channels"]:
+        _replace_unet_conv_in(pipe)
+
+    model_path = "output/train_derolling_separate/checkpoint/latest/unet/diffusion_pytorch_model.bin"
+    pipe.unet.load_state_dict(
+        torch.load(model_path, map_location=device)
+
+    )
+    pipe.unet.to(device)
+    logging.info(f"loaded unet parameters from {model_path}")
 
     try:
         pipe.enable_xformers_memory_efficient_attention()

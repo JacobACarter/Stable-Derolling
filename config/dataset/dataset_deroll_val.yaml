@@ -1,0 +1,6 @@
+dataset:
+  val:
+  - name: ceiling_fan
+    disp_name: ceiling_fan_train
+    dir: ceiling_fan.tar
+    filenames: data_split/ceiling_fan/ceiling_split_all_val.txt

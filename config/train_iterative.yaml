@@ -1,7 +1,7 @@
 base_config:
 - config/logging.yaml
 - config/wandb.yaml
-- config/dataset/dataset_fan_GS.yaml
+- config/dataset/dataset_fan_GS_train.yaml
 - config/dataset/dataset_fan_GS_val.yaml
 - config/dataset/dataset_vis.yaml
 - config/model_sdv2.yaml

@@ -568,9 +568,11 @@ class MarigoldRGBTrainer:
             # Save as 16-bit uint png
             if save_to_dir is not None:
                 img_name = batch["global_relative_path"][0].replace("/", "_")
-                png_save_path = os.path.join(save_to_dir, f"{img_name}.png")
-                global_to_save = (pipe_out.global_np * 65535.0).astype(np.uint16)
-                Image.fromarray(global_to_save).save(png_save_path, mode="I;16")
+                png_save_path = os.path.join(save_to_dir, f"{img_name}")
+                global_to_save = (global_pred*255).astype(np.uint8)
+                arr = global_to_save
+                arr = np.ascontiguousarray(arr.transpose(1,2,0))
+                Image.fromarray(arr, mode="RGB").save(png_save_path, mode="RGB")
 
         return metric_tracker.result()
 

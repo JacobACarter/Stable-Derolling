@@ -54,7 +54,7 @@ class MeanAbsRelLoss:
 
 
 class SILogMSELoss:
-    def __init__(self, lamb, log_pred=True, batch_reduction=True):
+    def __init__(self, lamb=1, log_pred=True, batch_reduction=True):
         """Scale Invariant Log MSE Loss
 
         Args:

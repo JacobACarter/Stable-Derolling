@@ -1,9 +1,19 @@
 dataset:
   train:
-    name: deroll
-    disp_name: deroll_train
-    dir: fan.tar
-    filenames: data_split/fan/fan_train.txt
-    resize_to_hw:
-    - 480
-    - 640
+    name: mixed
+    prob_ls: [0.4, 0.3, 0.3]
+    dataset_list: 
+    - name: ceiling_fan
+      disp_name: ceiling_fan_train
+      dir: ceiling_fan.tar
+      filenames: data_split/ceiling_fan/ceiling_split_all_train.txt
+
+    - name: fnaf_fan
+      disp_name: fnaf_fan_train
+      dir: fnaf_fan.tar
+      filenames: data_split/fnaf_fan/fnaf_fan_split_all_train.txt
+    
+    - name: plane
+      disp_name: plane_train
+      dir: plane.tar
+      filenames: data_split/plane/plane_split_all_train.txt

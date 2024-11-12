@@ -1,0 +1,15 @@
+dataset:
+  vis:
+  # - name: hypersim
+  #   disp_name: hypersim_vis
+  #   dir: hypersim/hypersim_processed_val.tar
+  #   filenames: data_split/hypersim/selected_vis_sample.txt
+  #   resize_to_hw:
+  #   - 480
+  #   - 640
+  - name: deroll
+    disp_name: deroll_vis
+    dir: fan_diverse.tar
+    filenames: data_split/fan_diverse/all_vis.txt
+
+  

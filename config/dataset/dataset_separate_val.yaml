@@ -1,0 +1,6 @@
+dataset:
+  val:
+  - name: deroll
+    disp_name: deroll_val_small_80
+    dir: fan_separate.tar
+    filenames: data_split/fan_separate/fan_separate_split_all_val.txt

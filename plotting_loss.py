@@ -4,6 +4,8 @@ from PIL import Image
 import numpy as np
 import torch
 from marigold.derolling_pipeline import MarigoldRGBPipeline
+import os
+import matplotlib.pyplot as plt
 
 def MeanAbsRelLoss(rs, gs):
     diff = rs - gs
@@ -29,27 +31,65 @@ def extract_image_from_tar(tar_file_path, image_name, destination_folder):
                 return
         print(f"Image '{image_name}' not found in the tar archive.")
 
+def encode_rgb(rgb, vae):
+    rgb = np.transpose(rgb, (2, 0, 1))
+    tensor = torch.from_numpy(rgb)
+    rgb_latent_scale_factor = 0.18215
+
+    h = vae.encoder(torch.unsqueeze(tensor.float(), 0))
+    moments = vae.quant_conv(h)
+    mean, logvar = torch.chunk(moments, 2, dim=1)
+    # scale latent
+    latent = mean * rgb_latent_scale_factor
+    return latent
+
 # Example usage:
-# tar_file_path = "../rolling-shutter-data/ceiling_fan.tar"
-# image_names = ["ceiling_fan/RS0.05/0001.png", "ceiling_fan/RS0.1/0001.png", "ceiling_fan/RS0.15/0001.png",
-#     "ceiling_fan/RS0.2/0001.png", "ceiling_fan/RS0.25/0001.png", "ceiling_fan/RS0.3/0001.png", "ceiling_fan/RS0.4/0001.png", "ceiling_fan/RS0.5/0001.png"]
-# destination_folder = "output/loss/extracted_images"
+tar_file_path = "../rolling-shutter-data/fan_diverse.tar"
+image_names = ["RS0.05/", "RS0.1/", "RS0.2/", "RS0.3/", "RS0.4/", "RS0.5/"]
+shutter_val = [0.05, 0.1,  0.2, 0.3, 0.4, 0.5]
+destination_folder = "output/loss/extracted_images"
 # for image in image_names:
-#     extract_image_from_tar(tar_file_path, image, destination_folder)
+# for i in range(10):
+#     extract_image_from_tar(tar_file_path, "table_fan/GS/" + "000" + str(i+1) + ".png", destination_folder)
 
 
-# GS = Image.open("output/loss/extracted_images/ceiling_fan/GS/0001.png")
-# GS_np = np.array(GS)
 
-# for image in image_names:
-#     RS = Image.open("output/loss/extracted_images/" + image)
-#     RS_np = np.array(RS)
-#     loss = MeanAbsRelLoss(RS_np, GS_np)
-#     print(image + ": " +str(loss))
 
 model = MarigoldRGBPipeline.from_pretrained(
     os.path.join("../stable-diffusion-2")
 )
+vae = model.vae
+# encode
+i = 0
+num_examples = 9
+val = np.empty(len(image_names))
+
+y = np.zeros((num_examples,  len(image_names)))
+x = shutter_val
+loss = get_loss("mse_loss")
+parent_dir = "input/centered/"
+for k in range(num_examples):
+    GS = Image.open(parent_dir + "GS/000" + str(k+1) + ".png")
+    GS_np = np.array(GS)
+    global_latent = encode_rgb(GS_np, vae)
+    i = 0
+    for image in image_names:
+        RS = Image.open(parent_dir + image + "000" + str(k+1) + ".png")
+        RS_np = np.array(RS)
+        RS_latent = encode_rgb(RS_np, vae)
+        y[k, i] = loss(RS_latent.float(), global_latent.float()).mean().item()
+        i+=1
+colors = ['blue', 'red', 'green', 'purple', 'orange', 'cyan', 'black', 'brown', 'pink']
+for  i in range(num_examples):
+    plt.scatter(x, y[i], marker='o', color=colors[i%len(colors)])
+plt.title("Loss as a Function of Rolling Shutter for the Centered Data")
+plt.ylabel("Mean Squared Error (Global - Rolling)")
+plt.xlabel("Rolling Shutter Amount")
+plt.savefig("output/loss/plot_centered" + ".png")
+
+
+
+
 
 
 
