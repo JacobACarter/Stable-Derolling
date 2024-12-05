@@ -235,7 +235,7 @@ if "__main__" == __name__:
     if 8 != pipe.unet.config["in_channels"]:
         _replace_unet_conv_in(pipe)
 
-    model_path = "output/train_derolling_separate/checkpoint/latest/unet/diffusion_pytorch_model.bin"
+    model_path = "output/train_derolling_plane/checkpoint/latest/unet/diffusion_pytorch_model.bin"
     pipe.unet.load_state_dict(
         torch.load(model_path, map_location=device)
 

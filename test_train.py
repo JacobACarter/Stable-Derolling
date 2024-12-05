@@ -125,7 +125,7 @@ if "__main__" == __name__:
     os.environ["BASE_DATA_DIR"] = "../rolling-shutter-data"
     os.environ["BASE_CKPT_DIR"] = "../"
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    os.environ["CUDA_VISIBLE_DEVICES"] = "2"
     # Resume previous run
     if resume_run is not None:
         print(f"Resume run: {resume_run}")

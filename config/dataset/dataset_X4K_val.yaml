@@ -1,0 +1,6 @@
+dataset:
+  val:
+  - name: deroll
+    disp_name: X4K_val
+    dir: data_blended.tar
+    filenames: data_split/data_blended_split/data_blended_split_all_val.txt
