@@ -3,7 +3,7 @@ base_config:
 - config/wandb.yaml
 - config/dataset/dataset_fnaf_train.yaml
 - config/dataset/dataset_fnaf_val.yaml
-- config/dataset/dataset_vis.yaml
+- config/dataset/dataset_fnaf_vis.yaml
 - config/model_sdv2.yaml
 
 

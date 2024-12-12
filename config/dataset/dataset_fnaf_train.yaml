@@ -2,5 +2,5 @@ dataset:
   train:
     name: fnaf_fan
     disp_name: fnaf_fan_train
-    dir: fnaf_fan_separate.tar
-    filenames: data_split/fnaf_fan_separate/fnaf_fan_separate_split_all_train.txt
+    dir: fnaf_fan_2000.tar
+    filenames: data_split/fnaf_fan_2000/fnaf_fan_2000_split_all_train.txt
