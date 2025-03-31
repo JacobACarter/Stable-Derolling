@@ -2,5 +2,5 @@ dataset:
   val:
     - name: fnaf_fan
       disp_name: fnaf_fan_val
-      dir: fnaf_fan.tar
-      filenames: data_split/fnaf_fan/fnaf_fan_split_all_val.txt
+      dir: fnaf_fan_2000.tar
+      filenames: data_split/fnaf_fan_2000/fnaf_fan_2000_split_all_val.txt

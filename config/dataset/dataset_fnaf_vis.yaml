@@ -1,0 +1,6 @@
+dataset:
+  vis:
+    - name: fnaf_fan
+      disp_name: fnaf_fan_vis
+      dir: fnaf_fan_2000.tar
+      filenames: data_split/fnaf_fan_2000/fnaf_fan_2000_split_all_vis.txt

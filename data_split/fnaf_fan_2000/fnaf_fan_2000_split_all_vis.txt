@@ -1,0 +1,2 @@
+fnaf_fan_2000/train/RS0.5/0001.png fnaf_fan_2000/train/RS0.5/0001.png
+fnaf_fan_2000/train/RS0.5/0002.png fnaf_fan_2000/train/RS0.5/0002.png
