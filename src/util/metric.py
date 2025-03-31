@@ -4,6 +4,7 @@
 
 import pandas as pd
 import torch
+import numpy as np
 
 
 # Adapted from: https://github.com/victoresque/pytorch-template/blob/master/utils/util.py
@@ -95,6 +96,15 @@ def log10(output, target, valid_mask=None):
     else:
         diff = torch.abs(torch.log10(output) - torch.log10(target))
     return diff.mean()
+
+def psnr(output, target, valid_mask=None):
+    mse = torch.mean((target - output) ** 2)
+    if(mse == 0):  # MSE is zero means no noise is present in the signal .
+                  # Therefore PSNR have no importance.
+        return 100
+    max_pixel = 255
+    psnr = 20 * torch.log10(max_pixel / torch.sqrt(mse))
+    return psnr
 
 
 # adapt from: https://github.com/imran3180/depth-map-prediction/blob/master/main.py

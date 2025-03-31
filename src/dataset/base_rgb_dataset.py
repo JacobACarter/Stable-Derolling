@@ -167,7 +167,7 @@ class BaseRGBDataset(Dataset):
             image_to_read = io.BytesIO(image_to_read)
         else:
             image_to_read = os.path.join(self.dataset_dir, img_rel_path)
-        image = Image.open(image_to_read)  # [H, W, rgb]
+        image = Image.open(image_to_read).convert("RGB")  # [H, W, rgb]
         image = np.asarray(image)
         return image
 

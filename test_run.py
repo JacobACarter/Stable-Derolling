@@ -150,7 +150,7 @@ if "__main__" == __name__:
     os.environ["BASE_DATA_DIR"] = "../rolling-shutter-data"
     os.environ["BASE_CKPT_DIR"] = "../"
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-    os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+    os.environ["CUDA_VISIBLE_DEVICES"] = "7"
 
     args = parser.parse_args()
 
@@ -235,7 +235,7 @@ if "__main__" == __name__:
     if 8 != pipe.unet.config["in_channels"]:
         _replace_unet_conv_in(pipe)
 
-    model_path = "output/train_derolling_plane/checkpoint/latest/unet/diffusion_pytorch_model.bin"
+    model_path = "output/train_derolling_general_3/checkpoint/latest/unet/diffusion_pytorch_model.bin"
     pipe.unet.load_state_dict(
         torch.load(model_path, map_location=device)
 

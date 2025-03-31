@@ -284,19 +284,19 @@ class MarigoldRGBPipeline(DiffusionPipeline):
         torch.cuda.empty_cache()  # clear vram cache for ensembling
 
         # # ----------------- Test-time ensembling -----------------
-        # if ensemble_size > 1:
-        #     global_pred, pred_uncert = ensemble_depth(
-        #         global_preds,
-        #         scale_invariant=self.scale_invariant,
-        #         shift_invariant=self.shift_invariant,
-        #         max_res=50,
-        #         **(ensemble_kwargs or {}),
-        #     )
-        # else:
-        #     global_pred = global_preds
-        #     pred_uncert = None
-        global_pred = global_preds
-        pred_uncert = None
+        if ensemble_size > 1:
+            global_pred, pred_uncert = ensemble_depth(
+                global_preds,
+                scale_invariant=self.scale_invariant,
+                shift_invariant=self.shift_invariant,
+                max_res=50,
+                **(ensemble_kwargs or {}),
+            )
+        else:
+            global_pred = global_preds
+            pred_uncert = None
+        # global_pred = global_preds
+        # pred_uncert = None
 
         ## Try to put this back eventually
         # Resize back to original resolution

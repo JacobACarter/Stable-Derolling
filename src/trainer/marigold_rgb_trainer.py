@@ -27,6 +27,8 @@ import os
 import shutil
 from datetime import datetime
 from typing import List, Union
+from torchmetrics import PeakSignalNoiseRatio, StructuralSimilarityIndexMeasure, MeanSquaredError
+from torchmetrics.collections import MetricCollection
 
 import numpy as np
 import torch
@@ -199,7 +201,11 @@ class MarigoldRGBTrainer:
 
         self.train_metrics.reset()
         accumulated_step = 0
-
+        #do evaluation at beginning
+        self.in_evaluation = True  # flag to do evaluation in resume run if validation is not finished
+        _is_latest_saved = True
+        # self.validate()
+        self.in_evaluation = False
         for epoch in range(self.epoch, self.max_epoch + 1):
             self.epoch = epoch
             logging.debug(f"epoch: {self.epoch}")
@@ -233,7 +239,6 @@ class MarigoldRGBTrainer:
                 #     raise NotImplementedError
 
                 batch_size = rolling.shape[0]
-
                 with torch.no_grad():
                     # Encode image
                     rolling_latent = self.model.encode_rgb(rolling)  # [B, 4, h, w]
@@ -316,7 +321,7 @@ class MarigoldRGBTrainer:
                 latent_loss = self.loss(model_pred.float(), target.float())
 
                 loss = latent_loss.mean()
-
+                print(loss)
                 self.train_metrics.update("loss", loss.item())
 
                 loss = loss / self.gradient_accumulation_steps
@@ -431,46 +436,47 @@ class MarigoldRGBTrainer:
     def validate(self):
         for i, val_loader in enumerate(self.val_loaders):
             val_dataset_name = val_loader.dataset.disp_name
+
             val_metric_dic = self.validate_single_dataset(
-                data_loader=val_loader, metric_tracker=self.val_metrics
+                data_loader=val_loader
             )
             logging.info(
                 f"Iter {self.effective_iter}. Validation metrics on `{val_dataset_name}`: {val_metric_dic}"
             )
+
+            # Log metrics
             tb_logger.log_dic(
                 {f"val/{val_dataset_name}/{k}": v for k, v in val_metric_dic.items()},
                 global_step=self.effective_iter,
             )
-            # save to file
+
+            # Save evaluation to a file
             eval_text = eval_dic_to_text(
                 val_metrics=val_metric_dic,
                 dataset_name=val_dataset_name,
                 sample_list_path=val_loader.dataset.filename_ls_path,
             )
-            _save_to = os.path.join(
-                self.out_dir_eval,
-                f"eval-{val_dataset_name}-iter{self.effective_iter:06d}.txt",
+            save_path = os.path.join(
+                self.out_dir_eval, f"eval-{val_dataset_name}-iter{self.effective_iter:06d}.txt"
             )
-            with open(_save_to, "w+") as f:
+            with open(save_path, "w+") as f:
                 f.write(eval_text)
 
-            # Update main eval metric
-            if 0 == i:
-                main_eval_metric = val_metric_dic[self.main_val_metric]
-                if (
-                    "minimize" == self.main_val_metric_goal
-                    and main_eval_metric < self.best_metric
-                    or "maximize" == self.main_val_metric_goal
-                    and main_eval_metric > self.best_metric
-                ):
-                    self.best_metric = main_eval_metric
-                    logging.info(
-                        f"Best metric: {self.main_val_metric} = {self.best_metric} at iteration {self.effective_iter}"
-                    )
-                    # Save a checkpoint
-                    self.save_checkpoint(
-                        ckpt_name=self._get_backup_ckpt_name(), save_train_state=False
-                    )
+            # # Update the best metric
+            # if i == 0:
+            #     main_eval_metric = val_metric_dic[self.main_val_metric]
+            #     is_best = (
+            #         (self.main_val_metric_goal == "minimize" and main_eval_metric < self.best_metric) or
+            #         (self.main_val_metric_goal == "maximize" and main_eval_metric > self.best_metric)
+            #     )
+            #     if is_best:
+            #         self.best_metric = main_eval_metric
+            #         logging.info(
+            #             f"New best metric: {self.main_val_metric} = {self.best_metric} at iteration {self.effective_iter}"
+            #         )
+            #         self.save_checkpoint(
+            #             ckpt_name=self._get_backup_ckpt_name(), save_train_state=False
+            #         )
 
     def visualize(self):
         for val_loader in self.vis_loaders:
@@ -481,100 +487,55 @@ class MarigoldRGBTrainer:
             os.makedirs(vis_out_dir, exist_ok=True)
             _ = self.validate_single_dataset(
                 data_loader=val_loader,
-                metric_tracker=self.val_metrics,
                 save_to_dir=vis_out_dir,
             )
 
     @torch.no_grad()
-    def validate_single_dataset(
-        self,
-        data_loader: DataLoader,
-        metric_tracker: MetricTracker,
-        save_to_dir: str = None,
-    ):
+    def validate_single_dataset(self, data_loader, save_to_dir=None):
         self.model.to(self.device)
-        metric_tracker.reset()
 
-        # Generate seed sequence for consistent evaluation
-        val_init_seed = self.cfg.validation.init_seed
-        val_seed_ls = generate_seed_sequence(val_init_seed, len(data_loader))
+        # Define metric collection
+        metrics = MetricCollection({
+            "PSNR": PeakSignalNoiseRatio(data_range=1.0),
+            "SSIM": StructuralSimilarityIndexMeasure(data_range=1.0),
+            "MSE" : MeanSquaredError()
+        }).to(self.device)
 
-        for i, batch in enumerate(
-            tqdm(data_loader, desc=f"evaluating on {data_loader.dataset.disp_name}"),
-            start=1,
-        ):
-            assert 1 == data_loader.batch_size
-            # Read input image
-            rolling_int = batch["rolling_int"].squeeze()  # [3, H, W]
-            # GT depth
-            global_int_ts = batch["global_int"].squeeze()
-            global_int = global_int_ts.numpy()
-            global_int_ts = global_int_ts.to(self.device)
+        # Reset metrics
+        metrics.reset()
 
-            # Random number generator
-            seed = val_seed_ls.pop()
-            if seed is None:
-                generator = None
-            else:
-                generator = torch.Generator(device=self.device)
-                generator.manual_seed(seed)
+        for batch in tqdm(data_loader, desc=f"Validating on {data_loader.dataset.disp_name}"):
+            # Assuming batch size of 1
+            rolling_int = batch["rolling_int"].squeeze().to(self.device)  # [C, H, W]
+            global_int = batch["global_int"].squeeze().to(self.device)  # Ground truth
 
-            # Predict depth
-            pipe_out: MarigoldRGBOutput = self.model(
+            # Model inference
+            pipe_out = self.model(
                 rolling_int,
                 denoising_steps=self.cfg.validation.denoising_steps,
                 ensemble_size=self.cfg.validation.ensemble_size,
                 processing_res=self.cfg.validation.processing_res,
                 match_input_res=self.cfg.validation.match_input_res,
-                generator=generator,
-                batch_size=1,  # use batch size 1 to increase reproducibility
-                color_map=None,
-                show_progress_bar=False,
-                resample_method=self.cfg.validation.resample_method,
+                batch_size=1,
+                generator=None,
             )
 
-            global_pred: np.ndarray = pipe_out.global_np
+            global_pred = torch.from_numpy(pipe_out.global_np).to(self.device)
+            global_int = (global_int/255).float()
+            # print("Type Pred: " + str(global_pred.dtype))
+            # print("Type Glob: " + str(global_int.dtype))
+            # Update metrics
+            metrics.update(global_pred.unsqueeze(0), global_int.unsqueeze(0))
 
-            # if "least_square" == self.cfg.eval.alignment:
-            #     global_pred, scale, shift = align_rgb_least_square(
-            #         gt_arr=global_int,
-            #         pred_arr=global_pred,
-            #         return_scale_shift=True,
-            #         max_resolution=self.cfg.eval.align_max_res,
-            #     )
-            # else:
-            #     raise RuntimeError(f"Unknown alignment type: {self.cfg.eval.alignment}")
-
-            # # Clip to dataset min max
-            # global_pred = np.clip(
-            #     global_pred,
-            #     a_min=data_loader.dataset.min_depth,
-            #     a_max=data_loader.dataset.max_depth,
-            # )
-
-            # clip to d > 0 for evaluation
-            global_pred = np.clip(global_pred, a_min=1e-6, a_max=None)
-
-            # Evaluate
-            sample_metric = []
-            global_pred_ts = torch.from_numpy(global_pred).to(self.device)
-
-            for met_func in self.metric_funcs:
-                _metric_name = met_func.__name__
-                _metric = met_func(global_pred_ts, global_int_ts, None).item()
-                sample_metric.append(_metric.__str__())
-                metric_tracker.update(_metric_name, _metric)
-
-            # Save as 16-bit uint png
+            # Optionally save predictions
             if save_to_dir is not None:
                 img_name = batch["global_relative_path"][0].replace("/", "_")
-                png_save_path = os.path.join(save_to_dir, f"{img_name}")
-                global_to_save = (global_pred*255).astype(np.uint8)
-                arr = global_to_save
-                arr = np.ascontiguousarray(arr.transpose(1,2,0))
-                Image.fromarray(arr, mode="RGB").save(png_save_path, mode="RGB")
+                save_path = os.path.join(save_to_dir, f"{img_name}")
+                prediction_img = (global_pred.cpu().numpy() * 255).astype(np.uint8)
+                Image.fromarray(prediction_img.transpose(1, 2, 0), mode="RGB").save(save_path)
 
-        return metric_tracker.result()
+        # Compute metrics
+        return metrics.compute()
 
     def _get_next_seed(self):
         if 0 == len(self.global_seed_sequence):

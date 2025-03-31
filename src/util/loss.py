@@ -50,6 +50,8 @@ class MeanAbsRelLoss:
         diff = pred - gt
         rel_abs = torch.abs(diff / gt)
         loss = torch.mean(rel_abs, dim=0)
+
+        
         return loss
 
 

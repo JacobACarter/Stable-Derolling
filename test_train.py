@@ -94,6 +94,9 @@ if "__main__" == __name__:
         "--base_data_dir", type=str, default=None, help="directory of training data"
     )
     parser.add_argument(
+        "--GPU", type=int, default=0,
+    )
+    parser.add_argument(
         "--base_ckpt_dir",
         type=str,
         default=None,
@@ -108,6 +111,7 @@ if "__main__" == __name__:
     args = parser.parse_args()
     resume_run = args.resume_run
     output_dir = args.output_dir
+    gpu_num = args.GPU
     base_data_dir = (
         args.base_data_dir
         if args.base_data_dir is not None
@@ -125,7 +129,8 @@ if "__main__" == __name__:
     os.environ["BASE_DATA_DIR"] = "../rolling-shutter-data"
     os.environ["BASE_CKPT_DIR"] = "../"
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-    os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+    print("argument gpu: " + str(gpu_num) + "\n")
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_num)
     # Resume previous run
     if resume_run is not None:
         print(f"Resume run: {resume_run}")
