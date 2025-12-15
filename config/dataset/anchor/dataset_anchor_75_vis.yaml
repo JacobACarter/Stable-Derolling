@@ -1,0 +1,6 @@
+dataset:
+  vis:
+  - name: deroll
+    disp_name: fan_vis
+    dir: custom_anchor.tar
+    filenames: data_split/custom_anchor/anchor_75_split_start_vis.txt

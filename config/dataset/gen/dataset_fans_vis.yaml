@@ -1,0 +1,6 @@
+dataset:
+  vis:
+  - name: deroll
+    disp_name: fan_vis
+    dir: fan_6.tar
+    filenames: data_split/fan_6_split/fan_6_split_all_vis.txt

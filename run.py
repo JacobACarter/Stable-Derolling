@@ -27,10 +27,33 @@ import numpy as np
 import torch
 from PIL import Image
 from tqdm.auto import tqdm
+from torch.nn import Conv2d
+from torch.nn.parameter import Parameter
 
 from marigold import MarigoldPipeline
 
 EXTENSION_LIST = [".jpg", ".jpeg", ".png"]
+
+def _replace_unet_conv_in(model):
+    # replace the first layer to accept 8 in_channels
+    _weight = model.unet.conv_in.weight.clone()  # [320, 4, 3, 3]
+    _bias = model.unet.conv_in.bias.clone()  # [320]
+    _weight = _weight.repeat((1, 2, 1, 1))  # Keep selected channel(s)
+    # half the activation magnitude
+    _weight *= 0.5
+    # new conv_in channel
+    _n_convin_out_channel = model.unet.conv_in.out_channels
+    _new_conv_in = Conv2d(
+        8, _n_convin_out_channel, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)
+    )
+    _new_conv_in.weight = Parameter(_weight)
+    _new_conv_in.bias = Parameter(_bias)
+    model.unet.conv_in = _new_conv_in
+    logging.info("Unet conv_in layer is replaced")
+    # replace config
+    model.unet.config["in_channels"] = 8
+    logging.info("Unet config is updated")
+    return
 
 
 if "__main__" == __name__:
@@ -124,12 +147,18 @@ if "__main__" == __name__:
         action="store_true",
         help="Flag of running on Apple Silicon.",
     )
+    parser.add_argument(
+        "--GPU",
+        type=str,
+        default="0",
+    )
 
     args = parser.parse_args()
 
     checkpoint_path = args.checkpoint
     input_rgb_dir = args.input_rgb_dir
     output_dir = args.output_dir
+    gpu = args.GPU
 
     denoise_steps = args.denoise_steps
     ensemble_size = args.ensemble_size
@@ -163,6 +192,13 @@ if "__main__" == __name__:
     os.makedirs(output_dir_npy, exist_ok=True)
     logging.info(f"output dir = {output_dir}")
 
+
+    os.environ["BASE_DATA_DIR"] = "../rolling-shutter-data"
+    os.environ["BASE_CKPT_DIR"] = "../"
+    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+    os.environ["CUDA_VISIBLE_DEVICES"] = gpu
+
+    args = parser.parse_args()
     # -------------------- Device --------------------
     if apple_silicon:
         if torch.backends.mps.is_available() and torch.backends.mps.is_built():
@@ -179,7 +215,7 @@ if "__main__" == __name__:
     logging.info(f"device = {device}")
 
     # -------------------- Data --------------------
-    rgb_filename_list = glob(os.path.join(input_rgb_dir, "*"))
+    rgb_filename_list = glob(os.path.join(input_rgb_dir, "**", "*"), recursive=True)
     rgb_filename_list = [
         f for f in rgb_filename_list if os.path.splitext(f)[1].lower() in EXTENSION_LIST
     ]
@@ -203,9 +239,14 @@ if "__main__" == __name__:
         variant = None
 
     pipe: MarigoldPipeline = MarigoldPipeline.from_pretrained(
-        checkpoint_path, variant=variant, torch_dtype=dtype
+        args.checkpoint
     )
+    if 8 != pipe.unet.config["in_channels"]:
+        _replace_unet_conv_in(pipe)
 
+    # pipe.unet.load_state_dict(torch.load(args.checkpoint, map_location=device))
+    pipe = pipe.to(device)
+    logging.info(f"loaded unet parameters from {args.checkpoint}")
     try:
         pipe.enable_xformers_memory_efficient_attention()
     except ImportError:
@@ -233,6 +274,7 @@ if "__main__" == __name__:
         for rgb_path in tqdm(rgb_filename_list, desc="Estimating depth", leave=True):
             # Read input image
             input_image = Image.open(rgb_path)
+            rgb_path_split = rgb_path.split("/")
 
             # Random number generator
             if seed is None:
@@ -257,25 +299,43 @@ if "__main__" == __name__:
 
             depth_pred: np.ndarray = pipe_out.depth_np
             depth_colored: Image.Image = pipe_out.depth_colored
+            # Compute relative path from input root, and corresponding output subfolders
+            rel_path = os.path.relpath(rgb_path, input_rgb_dir)
+            rel_dir = os.path.dirname(rel_path)  # preserve full folder structure
+
+            # Create parallel directories in each output type
+            output_dir_color_t = os.path.join(output_dir_color, rel_dir)
+            output_dir_tif_t = os.path.join(output_dir_tif, rel_dir)
+            output_dir_npy_t = os.path.join(output_dir_npy, rel_dir)
+            os.makedirs(output_dir_color_t, exist_ok=True)
+            os.makedirs(output_dir_tif_t, exist_ok=True)
+            os.makedirs(output_dir_npy_t, exist_ok=True)
+
+            os.makedirs(output_dir, exist_ok=True)
+            os.makedirs(output_dir_color_t, exist_ok=True)
+            os.makedirs(output_dir_tif_t, exist_ok=True)
+            os.makedirs(output_dir_npy_t, exist_ok=True)
 
             # Save as npy
             rgb_name_base = os.path.splitext(os.path.basename(rgb_path))[0]
             pred_name_base = rgb_name_base + "_pred"
-            npy_save_path = os.path.join(output_dir_npy, f"{pred_name_base}.npy")
+            npy_save_path = os.path.join(output_dir_npy_t, f"{pred_name_base}.npy")
             if os.path.exists(npy_save_path):
                 logging.warning(f"Existing file: '{npy_save_path}' will be overwritten")
             np.save(npy_save_path, depth_pred)
 
             # Save as 16-bit uint png
             depth_to_save = (depth_pred * 65535.0).astype(np.uint16)
-            png_save_path = os.path.join(output_dir_tif, f"{pred_name_base}.png")
+            png_save_path = os.path.join(output_dir_tif_t, f"{pred_name_base}.png")
             if os.path.exists(png_save_path):
                 logging.warning(f"Existing file: '{png_save_path}' will be overwritten")
             Image.fromarray(depth_to_save).save(png_save_path, mode="I;16")
 
+            print(rgb_path_split[-2])
+
             # Colorize
             colored_save_path = os.path.join(
-                output_dir_color, f"{pred_name_base}_colored.png"
+                output_dir_color_t, f"{pred_name_base}_colored.png"
             )
             if os.path.exists(colored_save_path):
                 logging.warning(

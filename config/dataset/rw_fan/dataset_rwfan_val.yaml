@@ -1,0 +1,6 @@
+dataset:
+  val:
+    - name: deroll
+      disp_name: fan_val
+      dir: cropped_new.tar
+      filenames: data_split/fan_rw/val.txt

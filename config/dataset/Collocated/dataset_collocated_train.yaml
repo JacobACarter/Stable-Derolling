@@ -1,0 +1,7 @@
+dataset:
+  train:
+    name: deroll
+    disp_name: Collocated
+    dir: collocated.tar
+    resize_to_hw: [300,300]
+    filenames: data_split/Collocated/train_pairs.txt

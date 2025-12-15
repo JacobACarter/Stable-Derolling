@@ -1,0 +1,10 @@
+fan_4_light_shear/GS/0180.png fan_4_light_shear/GS/0180.png
+fan_4_light_shear/RS0.05/0180.png fan_4_light_shear/RS0.05/0180.png
+fan_4_light_shear/RS0.075/0180.png fan_4_light_shear/RS0.075/0180.png
+fan_4_light_shear/RS0.1/0180.png fan_4_light_shear/RS0.1/0180.png
+fan_4_light_shear/RS0.15/0180.png fan_4_light_shear/RS0.15/0180.png
+fan_4_light_shear/RS0.2/0180.png fan_4_light_shear/RS0.2/0180.png
+fan_4_light_shear/RS0.3/0180.png fan_4_light_shear/RS0.3/0180.png
+fan_4_light_shear/RS0.4/0180.png fan_4_light_shear/RS0.4/0180.png
+fan_4_light_shear/RS0.5/0180.png fan_4_light_shear/RS0.5/0180.png
+fan_4_light_shear/RS0.8/0180.png fan_4_light_shear/RS0.8/0180.png

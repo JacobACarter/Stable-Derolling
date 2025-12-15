@@ -312,7 +312,7 @@ class MarigoldPipeline(DiffusionPipeline):
 
         # Clip output range
         depth_pred = depth_pred.clip(0, 1)
-
+        # print(depth_pred.shape)
         # Colorize
         if color_map is not None:
             depth_colored = colorize_depth_maps(
@@ -413,7 +413,9 @@ class MarigoldPipeline(DiffusionPipeline):
         batch_empty_text_embed = self.empty_text_embed.repeat(
             (rgb_latent.shape[0], 1, 1)
         ).to(device)  # [B, 2, 1024]
-
+        # print("rgb_latent:", rgb_latent.min(), rgb_latent.max())
+        # print("depth_latent init:", depth_latent.min(), depth_latent.max())
+        
         # Denoising loop
         if show_pbar:
             iterable = tqdm(
@@ -439,8 +441,18 @@ class MarigoldPipeline(DiffusionPipeline):
             depth_latent = self.scheduler.step(
                 noise_pred, t, depth_latent, generator=generator
             ).prev_sample
+            # if i % 5 == 0:
+            #     print(f"t={t}: depth_latent min/max: {depth_latent.min()}/{depth_latent.max()}")
+            #     print("unet_input:", unet_input.min(), unet_input.max(), unet_input.shape, unet_input.dtype)
+            #     noise_pred = self.unet(unet_input, t, encoder_hidden_states=batch_empty_text_embed).sample
+            #     print("noise_pred:", noise_pred.min(), noise_pred.max())
+            #     depth_latent = self.scheduler.step(noise_pred, t, depth_latent, generator=generator).prev_sample
+            #     print("depth_latent updated:", depth_latent.min(), depth_latent.max())
+
+
 
         depth = self.decode_depth(depth_latent)
+        # print("depth_mean min/max:", depth.min(), depth.max())
 
         # clip prediction
         depth = torch.clip(depth, -1.0, 1.0)

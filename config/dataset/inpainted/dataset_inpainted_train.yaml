@@ -1,0 +1,8 @@
+dataset:
+  train:
+    name: deroll
+    disp_name: Inpainted_train
+    dir: DataForJacob_TIGHT.tar
+    filenames: data_split/inpainted/train_split.txt
+
+    

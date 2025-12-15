@@ -1,0 +1,7 @@
+dataset:
+  train:
+    name: deroll
+    disp_name: Collocated
+    dir: RS_real.tar
+    resize_to_hw: [300,300]
+    filenames: data_split/RS_real/RS_real_train.txt

@@ -1,0 +1,10 @@
+Collocated/outdoor_cropped/2025-09-27_15-20-13/camera2/frame150.png Collocated/outdoor_cropped/2025-09-27_15-20-13/camera2/frame150.png
+Collocated/outdoor_cropped/2025-09-27_15-50-46/camera2/frame11.png Collocated/outdoor_cropped/2025-09-27_15-50-46/camera2/frame11.png
+Collocated/outdoor_2_cropped/2025-10-07_15-30-16/camera2/frame21.png Collocated/outdoor_2_cropped/2025-10-07_15-30-16/camera2/frame21.png
+Collocated/outdoor_cropped/2025-09-27_15-12-02/camera2/frame120.png Collocated/outdoor_cropped/2025-09-27_15-12-02/camera2/frame120.png
+Collocated/outdoor_2_cropped/2025-10-07_16-15-49/camera2/frame152.png Collocated/outdoor_2_cropped/2025-10-07_16-15-49/camera2/frame152.png
+Collocated/downtown_cropped/2025-10-08_16-00-41/camera2/frame29.png Collocated/downtown_cropped/2025-10-08_16-00-41/camera2/frame29.png
+Collocated/outdoor_2_cropped/2025-10-07_15-41-31/camera2/frame124.png Collocated/outdoor_2_cropped/2025-10-07_15-41-31/camera2/frame124.png
+Collocated/outdoor_2_cropped/2025-10-07_15-57-27/camera2/frame63.png Collocated/outdoor_2_cropped/2025-10-07_15-57-27/camera2/frame63.png
+Collocated/downtown_cropped/2025-10-08_15-29-28/camera2/frame32.png Collocated/downtown_cropped/2025-10-08_15-29-28/camera2/frame32.png
+Collocated/outdoor_2_cropped/2025-10-07_16-35-36/camera2/frame154.png Collocated/outdoor_2_cropped/2025-10-07_16-35-36/camera2/frame154.png

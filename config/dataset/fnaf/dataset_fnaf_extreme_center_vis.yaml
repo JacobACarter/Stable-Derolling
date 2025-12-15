@@ -1,0 +1,6 @@
+dataset:
+  vis:
+  - name: deroll
+    disp_name: fan_vis
+    dir: fnaf_fan_extreme.tar
+    filenames: data_split/fnaf_fan_extreme/fnaf_fan_extreme_split_center_vis.txt

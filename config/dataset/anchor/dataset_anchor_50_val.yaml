@@ -1,0 +1,6 @@
+dataset:
+  val:
+    - name: deroll
+      disp_name: fan_val
+      dir: custom_anchor.tar
+      filenames: data_split/custom_anchor/anchor_50_split_start_val.txt

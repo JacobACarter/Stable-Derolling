@@ -1,0 +1,6 @@
+dataset:
+  train:
+    name: fnaf_fan
+    disp_name: fnaf_fan_train
+    dir: fnaf_fan_extreme.tar
+    filenames: data_split/fnaf_fan_extreme/fnaf_fan_extreme_split_center_train.txt

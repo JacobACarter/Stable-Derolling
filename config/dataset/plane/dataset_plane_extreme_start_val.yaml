@@ -1,0 +1,6 @@
+dataset:
+  val:
+    - name: plane
+      disp_name: plane_val
+      dir: plane_extreme.tar
+      filenames: data_split/plane_extreme/plane_extreme_split_start_val.txt

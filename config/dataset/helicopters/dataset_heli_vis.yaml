@@ -1,0 +1,6 @@
+dataset:
+  vis:
+  - name: deroll
+    disp_name: fan_vis
+    dir: helicopter.tar
+    filenames: data_split/helicopters/helicopter_split/helicopter_split_vis.txt

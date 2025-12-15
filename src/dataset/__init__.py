@@ -32,6 +32,7 @@ from .nyu_dataset import NYUDataset
 from .scannet_dataset import ScanNetDataset
 from .vkitti_dataset import VirtualKITTIDataset
 from .test_rolling_dataset import TestRollingDataset
+from .base_rgb_depth_dataset import BaseRGBDepthDataset
 
 
 dataset_name_class_dict = {
@@ -45,7 +46,9 @@ dataset_name_class_dict = {
     "deroll": TestRollingDataset,
     "plane": TestRollingDataset,
     "fnaf_fan": TestRollingDataset,
-    "ceiling_fan":TestRollingDataset
+    "ceiling_fan":TestRollingDataset,
+    "DepthDeroll": BaseRGBDepthDataset,
+    "depth": BaseDepthDataset,
 }
 
 

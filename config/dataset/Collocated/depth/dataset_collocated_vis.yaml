@@ -1,0 +1,7 @@
+dataset:
+  vis:
+  - name: depth
+    disp_name: Collocated Vis
+    dir: 10-12-depths.tar
+    resize_to_hw: [300,300]
+    filenames: data_split/Collocated/10-12-depths/vis.txt

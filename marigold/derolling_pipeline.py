@@ -47,6 +47,7 @@ from .util.image_util import (
     get_tv_resample_method,
     resize_max_res,
 )
+import time
 
 
 class MarigoldRGBOutput(BaseOutput):
@@ -272,6 +273,7 @@ class MarigoldRGBPipeline(DiffusionPipeline):
         else:
             iterable = single_rgb_loader
         for batch in iterable:
+
             (batched_img,) = batch
             global_pred_raw = self.single_infer(
                 rgb_in=batched_img,
@@ -280,6 +282,7 @@ class MarigoldRGBPipeline(DiffusionPipeline):
                 generator=generator,
             )
             global_pred_ls.append(global_pred_raw.detach())
+
         global_preds = torch.concat(global_pred_ls, dim=0)
         torch.cuda.empty_cache()  # clear vram cache for ensembling
 
@@ -334,7 +337,7 @@ class MarigoldRGBPipeline(DiffusionPipeline):
         # else:
         #     depth_colored_img = None
 
-
+        # print(global_pred.shape)
 
         return MarigoldRGBOutput(
             global_np=global_pred,
@@ -408,7 +411,10 @@ class MarigoldRGBPipeline(DiffusionPipeline):
         timesteps = self.scheduler.timesteps  # [T]
 
         # Encode image
+        encode_start_time = time.perf_counter()
         rgb_latent = self.encode_rgb(rgb_in)
+        encode_end_time = time.perf_counter()
+        # print(f"Encoder Elapsed time: {(encode_end_time - encode_start_time)} seconds")
 
 
         # # Initial depth map (noise)
@@ -440,6 +446,7 @@ class MarigoldRGBPipeline(DiffusionPipeline):
             iterable = enumerate(timesteps)
 
         for i, t in iterable:
+            start_time = time.perf_counter()
             unet_input = torch.cat(
                 [rgb_latent, global_latent], dim=1
             )  # this order is important
@@ -448,12 +455,13 @@ class MarigoldRGBPipeline(DiffusionPipeline):
             noise_pred = self.unet(
                 unet_input, t, encoder_hidden_states=batch_empty_text_embed
             ).sample  # [B, 4, h, w]
-
+            # self.scheduler.config.prediction_type = "sample"
             # compute the previous noisy sample x_t -> x_t-1
             global_latent = self.scheduler.step(
                 noise_pred, t, global_latent, generator=generator
             ).prev_sample
-
+            end_time = time.perf_counter()
+            # print(f"Elapsed time:  {(end_time-start_time)} seconds iter {i}")
         #################################################################
 
         global_decode = self.decode_rgb(global_latent)
@@ -462,7 +470,7 @@ class MarigoldRGBPipeline(DiffusionPipeline):
         global_decode = torch.clip(global_decode, -1.0, 1.0)
         # shift to [0, 1]
         global_decode = (global_decode + 1.0) / 2.0
-
+        # print(global_decode.shape)
         return global_decode
 
     def encode_rgb(self, rgb_in: torch.Tensor) -> torch.Tensor:

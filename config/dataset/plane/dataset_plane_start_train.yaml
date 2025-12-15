@@ -1,0 +1,8 @@
+dataset:
+  train:
+    name: plane 
+    disp_name: plane_train
+    dir: plane_white.tar
+    filenames: data_split/plane_white/plane_white_split_start_train.txt
+
+    

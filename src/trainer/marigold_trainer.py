@@ -39,6 +39,7 @@ from torch.optim.lr_scheduler import LambdaLR
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from PIL import Image
+import cv2
 
 from marigold.marigold_pipeline import MarigoldPipeline, MarigoldDepthOutput
 from src.util import metric
@@ -201,7 +202,7 @@ class MarigoldTrainer:
 
         self.train_metrics.reset()
         accumulated_step = 0
-
+        self.visualize()
         for epoch in range(self.epoch, self.max_epoch + 1):
             self.epoch = epoch
             logging.debug(f"epoch: {self.epoch}")
@@ -222,17 +223,17 @@ class MarigoldTrainer:
 
                 # Get data
                 rgb = batch["rgb_norm"].to(device)
-                depth_gt_for_latent = batch[self.gt_depth_type].to(device)
+                depth_gt_for_latent = batch["depth_raw_linear"].to(device)
 
-                if self.gt_mask_type is not None:
-                    valid_mask_for_latent = batch[self.gt_mask_type].to(device)
-                    invalid_mask = ~valid_mask_for_latent
-                    valid_mask_down = ~torch.max_pool2d(
-                        invalid_mask.float(), 8, 8
-                    ).bool()
-                    valid_mask_down = valid_mask_down.repeat((1, 4, 1, 1))
-                else:
-                    raise NotImplementedError
+                # if self.gt_mask_type is not None:
+                #     valid_mask_for_latent = batch[self.gt_mask_type].to(device)
+                #     invalid_mask = ~valid_mask_for_latent
+                #     valid_mask_down = ~torch.max_pool2d(
+                #         invalid_mask.float(), 8, 8
+                #     ).bool()
+                #     valid_mask_down = valid_mask_down.repeat((1, 4, 1, 1))
+                # else:
+                #     raise NotImplementedError
 
                 batch_size = rgb.shape[0]
 
@@ -296,6 +297,7 @@ class MarigoldTrainer:
                 if torch.isnan(model_pred).any():
                     logging.warning("model_pred contains NaN.")
 
+                self.prediction_type = "sample"
                 # Get the target for loss depending on the prediction type
                 if "sample" == self.prediction_type:
                     target = gt_depth_latent
@@ -308,14 +310,14 @@ class MarigoldTrainer:
                 else:
                     raise ValueError(f"Unknown prediction type {self.prediction_type}")
 
-                # Masked latent loss
-                if self.gt_mask_type is not None:
-                    latent_loss = self.loss(
-                        model_pred[valid_mask_down].float(),
-                        target[valid_mask_down].float(),
-                    )
-                else:
-                    latent_loss = self.loss(model_pred.float(), target.float())
+                # # Masked latent loss
+                # if self.gt_mask_type is not None:
+                #     latent_loss = self.loss(
+                #         model_pred[valid_mask_down].float(),
+                #         target[valid_mask_down].float(),
+                #     )
+                # else:
+                latent_loss = self.loss(model_pred.float(), target.float())
 
                 loss = latent_loss.mean()
 
@@ -486,7 +488,6 @@ class MarigoldTrainer:
                 metric_tracker=self.val_metrics,
                 save_to_dir=vis_out_dir,
             )
-
     @torch.no_grad()
     def validate_single_dataset(
         self,
@@ -507,14 +508,14 @@ class MarigoldTrainer:
         ):
             assert 1 == data_loader.batch_size
             # Read input image
-            rgb_int = batch["rgb_int"]  # [B, 3, H, W]
+            rgb_int = batch["rgb_int"].to(self.device)  # [B, 3, H, W]
             # GT depth
-            depth_raw_ts = batch["depth_raw_linear"].squeeze()
-            depth_raw = depth_raw_ts.numpy()
-            depth_raw_ts = depth_raw_ts.to(self.device)
-            valid_mask_ts = batch["valid_mask_raw"].squeeze()
-            valid_mask = valid_mask_ts.numpy()
-            valid_mask_ts = valid_mask_ts.to(self.device)
+            depth_raw_ts = batch["depth_raw_linear"].squeeze().to(self.device)
+            # depth_raw = depth_raw_ts.numpy()
+            # depth_raw_ts = depth_raw_ts.to(self.device)
+            # valid_mask_ts = batch["valid_mask_raw"].squeeze()
+            # valid_mask = valid_mask_ts.numpy()
+            # valid_mask_ts = valid_mask_ts.to(self.device)
 
             # Random number generator
             seed = val_seed_ls.pop()
@@ -537,47 +538,59 @@ class MarigoldTrainer:
                 show_progress_bar=False,
                 resample_method=self.cfg.validation.resample_method,
             )
-
-            depth_pred: np.ndarray = pipe_out.depth_np
-
-            if "least_square" == self.cfg.eval.alignment:
-                depth_pred, scale, shift = align_depth_least_square(
-                    gt_arr=depth_raw,
-                    pred_arr=depth_pred,
-                    valid_mask_arr=valid_mask,
-                    return_scale_shift=True,
-                    max_resolution=self.cfg.eval.align_max_res,
-                )
-            else:
-                raise RuntimeError(f"Unknown alignment type: {self.cfg.eval.alignment}")
+            # global_pred = torch.from_numpy(pipe_out.depth_np).to(self.device)
+            # depth_int = (depth_int/255).float()
+            # # if "least_square" == self.cfg.eval.alignment:
+            #     depth_pred, scale, shift = align_depth_least_square(
+            #         gt_arr=depth_raw,
+            #         pred_arr=depth_pred,
+            #         valid_mask_arr=valid_mask,
+            #         return_scale_shift=True,
+            #         max_resolution=self.cfg.eval.align_max_res,
+            #     )
+            # else:
+            #     raise RuntimeError(f"Unknown alignment type: {self.cfg.eval.alignment}")
 
             # Clip to dataset min max
-            depth_pred = np.clip(
-                depth_pred,
-                a_min=data_loader.dataset.min_depth,
-                a_max=data_loader.dataset.max_depth,
-            )
+            # depth_pred = np.clip(
+            #     depth_pred,
+            #     a_min=data_loader.dataset.min_depth,
+            #     a_max=data_loader.dataset.max_depth,
+            # )
 
-            # clip to d > 0 for evaluation
-            depth_pred = np.clip(depth_pred, a_min=1e-6, a_max=None)
+            # # clip to d > 0 for evaluation
+            # depth_pred = np.clip(depth_pred, a_min=1e-6, a_max=None)
 
-            # Evaluate
-            sample_metric = []
-            depth_pred_ts = torch.from_numpy(depth_pred).to(self.device)
+            # # Evaluate
+            # sample_metric = []
+            # depth_pred_ts = torch.from_numpy(depth_pred).to(self.device)
 
-            for met_func in self.metric_funcs:
-                _metric_name = met_func.__name__
-                _metric = met_func(depth_pred_ts, depth_raw_ts, valid_mask_ts).item()
-                sample_metric.append(_metric.__str__())
-                metric_tracker.update(_metric_name, _metric)
+            # for met_func in self.metric_funcs:
+            #     _metric_name = met_func.__name__
+            #     _metric = met_func(depth_pred_ts, depth_raw_ts, valid_mask_ts).item()
+            #     sample_metric.append(_metric.__str__())
+            #     metric_tracker.update(_metric_name, _metric)
 
-            # Save as 16-bit uint png
+            # === Visualization / Debug block ===
             if save_to_dir is not None:
-                img_name = batch["rgb_relative_path"][0].replace("/", "_")
-                png_save_path = os.path.join(save_to_dir, f"{img_name}.png")
-                depth_to_save = (pipe_out.depth_np * 65535.0).astype(np.uint16)
-                Image.fromarray(depth_to_save).save(png_save_path, mode="I;16")
+                # Make sure the save directory exists
+                os.makedirs(save_to_dir, exist_ok=True)
 
+                # Generate a file-safe name
+                img_name = batch["rgb_relative_path"][0].replace("/", "_")
+
+                # Paths
+                png_save_path = os.path.join(save_to_dir, f"{img_name}.png")
+                png_save_path_rgb = os.path.join(save_to_dir, f"{img_name}_rgb.png")
+
+                # Depth: your pipeline outputs float32 [0,1], convert to 16-bit
+                depth_to_save = (pipe_out.depth_np * 255).astype(np.uint8)
+                Image.fromarray(depth_to_save).save(png_save_path, mode="I;8")
+
+                # RGB: ensure [C,H,W] -> [H,W,C] and convert to uint8
+                # rgb_to_save = (pipe_out.rgb * 255).astype(np.uint8)  # [C,H,W]
+                # rgb_to_save_hwc = np.transpose(rgb_to_save, (1, 2, 0))  # [H,W,C]
+                # Image.fromarray(rgb_to_save_hwc, mode="RGB").save(png_save_path_rgb)
         return metric_tracker.result()
 
     def _get_next_seed(self):

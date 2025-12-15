@@ -8,7 +8,9 @@
 /wandb
 /venv
 /cache
-
+/flows
+/scene
+/X4K
 **/.ipynb_checkpoints/
 .vscode/
 .idea
@@ -21,3 +23,9 @@
 *.mexa64
 *.pdf
 *.tar
+*.tar.gz
+*.pkl
+*.png
+*.tar.gz
+*.pkl
+*.png

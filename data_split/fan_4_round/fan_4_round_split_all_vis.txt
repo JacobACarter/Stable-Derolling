@@ -1,0 +1,10 @@
+fan_4_round/GS/0180.png fan_4_round/GS/0180.png
+fan_4_round/RS0.05/0180.png fan_4_round/RS0.05/0180.png
+fan_4_round/RS0.075/0180.png fan_4_round/RS0.075/0180.png
+fan_4_round/RS0.1/0180.png fan_4_round/RS0.1/0180.png
+fan_4_round/RS0.15/0180.png fan_4_round/RS0.15/0180.png
+fan_4_round/RS0.2/0180.png fan_4_round/RS0.2/0180.png
+fan_4_round/RS0.3/0180.png fan_4_round/RS0.3/0180.png
+fan_4_round/RS0.4/0180.png fan_4_round/RS0.4/0180.png
+fan_4_round/RS0.5/0180.png fan_4_round/RS0.5/0180.png
+fan_4_round/RS0.8/0180.png fan_4_round/RS0.8/0180.png

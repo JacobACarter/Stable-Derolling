@@ -1,0 +1,6 @@
+dataset:
+  train:
+    name: deroll
+    disp_name: rw_fan_train
+    dir: cropped_new.tar
+    filenames: data_split/fan_rw/train.txt

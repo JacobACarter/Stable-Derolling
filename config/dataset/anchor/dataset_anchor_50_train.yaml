@@ -1,0 +1,6 @@
+dataset:
+  train:
+    name: deroll
+    disp_name: fan_train
+    dir: custom_anchor.tar
+    filenames: data_split/custom_anchor/anchor_50_split_start_train.txt

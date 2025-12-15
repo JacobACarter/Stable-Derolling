@@ -20,3 +20,4 @@
 
 from .marigold_pipeline import MarigoldPipeline, MarigoldDepthOutput  # noqa: F401
 from .derolling_pipeline import MarigoldRGBPipeline, MarigoldRGBOutput
+from .derolling_depth_pipeline import MarigoldRGBDepthPipeline, MarigoldDepthOutput

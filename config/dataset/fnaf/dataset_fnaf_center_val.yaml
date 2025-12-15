@@ -1,0 +1,6 @@
+dataset:
+  val:
+    - name: fnaf_fan
+      disp_name: fnaf_fan_val
+      dir: fnaf_fan_cs.tar
+      filenames: data_split/fnaf_cs/fnaf_fan_cs_split_center_val.txt

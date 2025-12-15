@@ -1,0 +1,7 @@
+dataset:
+  train:
+    name: deroll
+    disp_name: Collocated
+    dir: 10-20-final.tar
+    resize_to_hw: [300,300]
+    filenames: data_split/Collocated/10-20-no_indoors/train_pairs.txt

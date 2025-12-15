@@ -1,0 +1,10 @@
+plane_extreme/test/GS/0000.png plane_extreme/test/GS/0000.png
+plane_extreme/test/RS0.05/START/0000.png plane_extreme/test/RS0.05/START/0000.png
+plane_extreme/test/RS0.075/START/0000.png plane_extreme/test/RS0.075/START/0000.png
+plane_extreme/test/RS0.1/START/0000.png plane_extreme/test/RS0.1/START/0000.png
+plane_extreme/test/RS0.15/START/0000.png plane_extreme/test/RS0.15/START/0000.png
+plane_extreme/test/RS0.2/START/0000.png plane_extreme/test/RS0.2/START/0000.png
+plane_extreme/test/RS0.3/START/0000.png plane_extreme/test/RS0.3/START/0000.png
+plane_extreme/test/RS0.4/START/0000.png plane_extreme/test/RS0.4/START/0000.png
+plane_extreme/test/RS0.5/START/0000.png plane_extreme/test/RS0.5/START/0000.png
+plane_extreme/test/RS0.8/START/0000.png plane_extreme/test/RS0.8/START/0000.png

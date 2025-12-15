@@ -1,0 +1,10 @@
+10-12/subset_cropped/2025-10-12_18-07-28/camera2/frame39.png 10-12/subset_cropped/2025-10-12_18-07-28/camera2/frame39.png
+10-12/subset_cropped/2025-10-12_17-40-29/camera2/frame94.png 10-12/subset_cropped/2025-10-12_17-40-29/camera2/frame94.png
+10-12/subset_cropped/2025-10-12_17-54-27/camera2/frame128.png 10-12/subset_cropped/2025-10-12_17-54-27/camera2/frame128.png
+10-12/subset_cropped/2025-10-12_17-37-20/camera2/frame100.png 10-12/subset_cropped/2025-10-12_17-37-20/camera2/frame100.png
+10-12/subset_cropped/2025-10-12_18-09-41/camera2/frame05.png 10-12/subset_cropped/2025-10-12_18-09-41/camera2/frame05.png
+10-12/subset_cropped/2025-10-12_17-45-20/camera2/frame127.png 10-12/subset_cropped/2025-10-12_17-45-20/camera2/frame127.png
+10-12/subset_cropped/2025-10-12_17-50-31/camera2/frame92.png 10-12/subset_cropped/2025-10-12_17-50-31/camera2/frame92.png
+10-12/subset_cropped/2025-10-12_18-05-26/camera2/frame165.png 10-12/subset_cropped/2025-10-12_18-05-26/camera2/frame165.png
+10-12/subset_cropped/2025-10-12_17-40-29/camera2/frame157.png 10-12/subset_cropped/2025-10-12_17-40-29/camera2/frame157.png
+10-12/subset_cropped/2025-10-12_17-33-11/camera2/frame131.png 10-12/subset_cropped/2025-10-12_17-33-11/camera2/frame131.png

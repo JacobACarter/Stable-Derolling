@@ -1,0 +1,6 @@
+dataset:
+  train:
+    name: deroll
+    disp_name: X4K_25_train
+    dir: X4K_5.tar
+    filenames: data_split/X4K/X4K_split_0.25_train.txt

@@ -1,0 +1,10 @@
+10-20-final/10-20-cropped/2025-10-20_16-37-49/camera2/frame148.png 10-20-final/10-20-cropped/2025-10-20_16-37-49/camera2/frame148.png
+10-20-final/10-20-cropped/2025-10-20_14-09-32/camera2/frame299.png 10-20-final/10-20-cropped/2025-10-20_14-09-32/camera2/frame299.png
+10-20-final/10-20-cropped/2025-10-20_17-26-56/camera2/frame276.png 10-20-final/10-20-cropped/2025-10-20_17-26-56/camera2/frame276.png
+10-20-final/10-20-indoor-cropped/2025-10-20_16-56-14/camera2/frame59.png 10-20-final/10-20-indoor-cropped/2025-10-20_16-56-14/camera2/frame59.png
+10-20-final/10-20-cropped/2025-10-20_16-39-48/camera2/frame331.png 10-20-final/10-20-cropped/2025-10-20_16-39-48/camera2/frame331.png
+10-20-final/10-20-cropped/2025-10-20_17-16-58/camera2/frame688.png 10-20-final/10-20-cropped/2025-10-20_17-16-58/camera2/frame688.png
+10-20-final/10-20-cropped/2025-10-20_16-39-48/camera2/frame923.png 10-20-final/10-20-cropped/2025-10-20_16-39-48/camera2/frame923.png
+10-20-final/10-20-cropped/2025-10-20_16-39-48/camera2/frame851.png 10-20-final/10-20-cropped/2025-10-20_16-39-48/camera2/frame851.png
+10-20-final/10-20-cropped/2025-10-20_14-15-22/camera2/frame233.png 10-20-final/10-20-cropped/2025-10-20_14-15-22/camera2/frame233.png
+10-20-final/10-20-indoor-cropped/2025-10-20_16-25-59/camera2/frame285.png 10-20-final/10-20-indoor-cropped/2025-10-20_16-25-59/camera2/frame285.png

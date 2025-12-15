@@ -102,10 +102,14 @@ if "__main__" == __name__:
         action="store_true",
         help="Add datetime to the output folder name",
     )
+    parser.add_argument(
+        "--GPU", type=int, default=0,
+    )
 
     args = parser.parse_args()
     resume_run = args.resume_run
     output_dir = args.output_dir
+    gpu_num = args.GPU
     base_data_dir = (
         args.base_data_dir
         if args.base_data_dir is not None
@@ -118,6 +122,14 @@ if "__main__" == __name__:
     )
 
     # -------------------- Initialization --------------------
+
+        #Set environmental variables
+    os.environ["BASE_DATA_DIR"] = "../rolling-shutter-data"
+    os.environ["BASE_CKPT_DIR"] = "../"
+    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+    print("argument gpu: " + str(gpu_num) + "\n")
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_num)
+    # Resume previous run
     # Resume previous run
     if resume_run is not None:
         print(f"Resume run: {resume_run}")

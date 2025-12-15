@@ -1,0 +1,6 @@
+dataset:
+  vis:
+  - name: deroll
+    disp_name: fan_vis
+    dir: cropped_new.tar
+    filenames: data_split/fan_rw/vis.txt

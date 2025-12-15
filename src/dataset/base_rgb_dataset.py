@@ -83,6 +83,7 @@ class BaseRGBDataset(Dataset):
         # training arguments
         self.augm_args = augmentation_args
         self.resize_to_hw = resize_to_hw
+        print(resize_to_hw)
 
         # Load filenames
         with open(self.filename_ls_path, "r") as f:
@@ -103,11 +104,16 @@ class BaseRGBDataset(Dataset):
 
     def __getitem__(self, index):
         rasters, other = self._get_data_item(index)
-        if DatasetMode.TRAIN == self.mode:
-            rasters = self._training_preprocess(rasters)
+
+        rasters = self._training_preprocess(rasters)
         # merge
         outputs = rasters
         outputs.update(other)
+
+        # Include full relative paths for later use
+        outputs["global_path"] = other["global_relative_path"]
+        outputs["rolling_path"] = other["rolling_relative_path"]
+
         return outputs
 
     def _get_data_item(self, index):
@@ -119,15 +125,19 @@ class BaseRGBDataset(Dataset):
         rasters.update(self._load_rgb_data(global_rel_path, False))
 
         # Rolling data
-
-        # RGB Data (Rolling Shutter)
         rolling_data = self._load_rgb_data(rolling_rel_path, True)
         rasters.update(rolling_data)
 
-
-        other = {"index": index, "global_relative_path": global_rel_path}
+        other = {
+            "index": index,
+            "global_relative_path": global_rel_path,   # e.g., "folder1/folder2/global.png"
+            "rolling_relative_path": rolling_rel_path, # e.g., "folder1/folder2/rolling.png"
+        }
 
         return rasters, other
+
+
+
 
     def _load_rgb_data(self, rgb_rel_path, rolling):
         # Read RGB data
@@ -184,11 +194,13 @@ class BaseRGBDataset(Dataset):
 
     def _training_preprocess(self, rasters):
         # Augmentation
-        if self.augm_args is not None:
-            rasters = self._augment_data(rasters)
+        if self.mode == DatasetMode.TRAIN:
+            if self.augm_args is not None:
+                rasters = self._augment_data(rasters)
 
         # Resize
         if self.resize_to_hw is not None:
+            # print("here")
             resize_transform = Resize(
                 size=self.resize_to_hw, interpolation=InterpolationMode.NEAREST_EXACT
             )

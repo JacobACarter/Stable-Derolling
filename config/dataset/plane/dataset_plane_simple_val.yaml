@@ -1,0 +1,6 @@
+dataset:
+  val:
+    - name: plane
+      disp_name: plane_val
+      dir: plane_cs.tar
+      filenames: data_split/plane_cs/plane_cs_split_center_train.txt

@@ -140,16 +140,30 @@ mean = (pca.mean_ )  # Mean of the training data
 components = (pca.components_ ) # Principal components
 explained_variance = (pca.explained_variance_)  # Variance along each principal component
 
-# Function to compute Mahalanobis distance
-def mahalanobis_distance(new_point, mean, components, explained_variance):
-    # Project new point into PCA space
+def mahalanobis_distance_batch(new_points,explained_variance):
+    """
+    Computes Mahalanobis distance for each point in a batch.
 
-    
-    # Compute the Mahalanobis distance
-    inv_cov = np.diag(1 / explained_variance)  # Inverse of the diagonal covariance matrix
-    distance = np.sqrt(np.dot(np.dot(new_point, inv_cov), new_point.T))
-    
-    return distance
+    Parameters:
+    - new_points: (num_samples, n_components) transformed PCA vectors
+    - mean: (n_components,) PCA-space mean
+    - components: (n_components, original_dim) PCA components
+    - explained_variance: (n_components,) variance along each PCA axis
+
+    Returns:
+    - distances: (num_samples,) array of Mahalanobis distances
+    - mean_distance: scalar mean Mahalanobis distance across batch
+    """
+    # Ensure inputs are numpy arrays
+    new_points = np.asarray(new_points)  # (num_samples, n_components)
+
+
+
+    inv_cov = 1 / explained_variance  # (n_components,)
+
+    distances = np.sqrt(np.sum(new_point**2 * inv_cov, axis=1))  # (num_samples,)
+
+    return distances, np.mean(distances)  # Return both individual and mean distances
 
 batch_images = []
 # Example new point
@@ -175,5 +189,5 @@ num_samples, channels, height, width = latents_np.shape
 reshaped_latents = latents_np.reshape(num_samples, -1)
 new_point = pca.transform(reshaped_latents)
 # Compute Mahalanobis distance
-distance = mahalanobis_distance(new_point, mean, components, explained_variance)
+distance = mahalanobis_distance_batch(new_point, explained_variance)
 print("Mahalanobis Distance:", distance)

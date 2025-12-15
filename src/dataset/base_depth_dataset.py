@@ -64,10 +64,10 @@ class BaseDepthDataset(Dataset):
         filename_ls_path: str,
         dataset_dir: str,
         disp_name: str,
-        min_depth: float,
-        max_depth: float,
-        has_filled_depth: bool,
-        name_mode: DepthFileNameMode,
+        min_depth: float = 0,
+        max_depth: float = 255,
+        has_filled_depth: bool = False,
+        name_mode: DepthFileNameMode = DepthFileNameMode.id,
         depth_transform: Union[DepthNormalizerBase, None] = None,
         augmentation_args: dict = None,
         resize_to_hw=None,
@@ -139,11 +139,8 @@ class BaseDepthDataset(Dataset):
             rasters.update(depth_data)
             # valid mask
             rasters["valid_mask_raw"] = self._get_valid_mask(
-                rasters["depth_raw_linear"]
-            ).clone()
-            rasters["valid_mask_filled"] = self._get_valid_mask(
-                rasters["depth_filled_linear"]
-            ).clone()
+                    rasters["depth_raw_linear"]
+                ).clone()
 
         other = {"index": index, "rgb_relative_path": rgb_rel_path}
 
@@ -173,33 +170,37 @@ class BaseDepthDataset(Dataset):
             outputs["depth_filled_linear"] = depth_filled_linear
         else:
             outputs["depth_filled_linear"] = depth_raw_linear.clone()
-
+        # print(f"max depth: {torch.max(depth_raw_linear)}, min depth: {torch.min(depth_raw_linear)}")
         return outputs
 
     def _get_data_path(self, index):
         filename_line = self.filenames[index]
 
         # Get data path
-        rgb_rel_path = filename_line[0]
+        rgb_rel_path = filename_line[1]
 
         depth_rel_path, filled_rel_path = None, None
         if DatasetMode.RGB_ONLY != self.mode:
-            depth_rel_path = filename_line[1]
-            if self.has_filled_depth:
-                filled_rel_path = filename_line[2]
+            depth_rel_path = filename_line[0]
+            # if self.has_filled_depth:
+            #     filled_rel_path = filename_line[2]
         return rgb_rel_path, depth_rel_path, filled_rel_path
 
     def _read_image(self, img_rel_path) -> np.ndarray:
         if self.is_tar:
             if self.tar_obj is None:
                 self.tar_obj = tarfile.open(self.dataset_dir)
-            image_to_read = self.tar_obj.extractfile("./" + img_rel_path)
+            # print(self.tar_obj.getnames())
+            image_to_read = self.tar_obj.extractfile(img_rel_path)
             image_to_read = image_to_read.read()
             image_to_read = io.BytesIO(image_to_read)
         else:
             image_to_read = os.path.join(self.dataset_dir, img_rel_path)
-        image = Image.open(image_to_read)  # [H, W, rgb]
-        image = np.asarray(image)
+        image = Image.open(image_to_read).convert("RGB")  # [H, W, rgb]
+
+        image = np.asarray(image, np.float32)
+        # print(image.shape)
+
         return image
 
     def _read_rgb_file(self, rel_path) -> np.ndarray:
@@ -210,13 +211,18 @@ class BaseDepthDataset(Dataset):
     def _read_depth_file(self, rel_path):
         depth_in = self._read_image(rel_path)
         #  Replace code below to decode depth according to dataset definition
-        depth_decoded = depth_in
+        if depth_in.ndim == 3 and depth_in.shape[2] == 3:
+                # print("here!")
+                # convert to single channel (take first channel)
+                depth_decoded = depth_in[:, :, 0]
 
+        else:
+            depth_decoded = depth_in
         return depth_decoded
 
     def _get_valid_mask(self, depth: torch.Tensor):
         valid_mask = torch.logical_and(
-            (depth > self.min_depth), (depth < self.max_depth)
+            (depth >= self.min_depth), (depth <= self.max_depth)
         ).bool()
         return valid_mask
 
@@ -225,27 +231,13 @@ class BaseDepthDataset(Dataset):
         if self.augm_args is not None:
             rasters = self._augment_data(rasters)
 
-        # Normalization
+        # Resize
+                # Normalization
         rasters["depth_raw_norm"] = self.depth_transform(
             rasters["depth_raw_linear"], rasters["valid_mask_raw"]
         ).clone()
-        rasters["depth_filled_norm"] = self.depth_transform(
-            rasters["depth_filled_linear"], rasters["valid_mask_filled"]
-        ).clone()
-
-        # Set invalid pixel to far plane
-        if self.move_invalid_to_far_plane:
-            if self.depth_transform.far_plane_at_max:
-                rasters["depth_filled_norm"][~rasters["valid_mask_filled"]] = (
-                    self.depth_transform.norm_max
-                )
-            else:
-                rasters["depth_filled_norm"][~rasters["valid_mask_filled"]] = (
-                    self.depth_transform.norm_min
-                )
-
-        # Resize
         if self.resize_to_hw is not None:
+            # print("here")
             resize_transform = Resize(
                 size=self.resize_to_hw, interpolation=InterpolationMode.NEAREST_EXACT
             )

@@ -1,0 +1,6 @@
+dataset:
+  vis:
+  - name: deroll
+    disp_name: plane_vis
+    dir: plane_extreme.tar
+    filenames: data_split/plane_extreme/plane_extreme_split_center_vis.txt

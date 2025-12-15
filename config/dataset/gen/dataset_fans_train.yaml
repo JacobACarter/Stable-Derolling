@@ -1,0 +1,39 @@
+dataset:
+  train:
+    name: mixed
+    prob_ls: [0.14, 0.14, 0.14, 0.14, 0.14, 0.14, 0.14]
+    dataset_list: 
+    - name: deroll
+      disp_name: fan_3
+      dir: fan_cs.tar
+      filenames: data_split/fan_cs_split/fan_cs_split_center_train.txt
+
+    - name: deroll
+      disp_name: fan_4
+      dir: fan_4.tar
+      filenames: data_split/fan_4_split/fan_4_split_all_train.txt
+    
+    - name: deroll
+      disp_name: fan_4_light
+      dir: fan_4_light.tar
+      filenames: data_split/fan_4_light_split/fan_4_light_split_all_train.txt
+          
+    - name: deroll
+      disp_name: fan_6
+      dir: fan_6.tar
+      filenames: data_split/fan_6_split/fan_6_split_all_train.txt  
+
+    - name: deroll
+      disp_name: fan_4_light_shear
+      dir: fan_4_light_shear.tar
+      filenames: data_split/fan_4_light_shear/fan_4_light_shear_split_all_train.txt
+    
+    - name: deroll
+      disp_name: fan_4_round_shear
+      dir: fan_4_round.tar
+      filenames: data_split/fan_4_round/fan_4_round_split_all_train.txt
+
+    - name: deroll
+      disp_name: fan_5
+      dir: fan_5.tar
+      filenames: data_split/fan_5/fan_5_split_all_train.txt

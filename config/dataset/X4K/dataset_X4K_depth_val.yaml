@@ -1,0 +1,6 @@
+dataset:
+  val:
+    - name: Depth
+      disp_name: X4K_center_val
+      dir: X4K_depth.tar
+      filenames: data_split/X4K_depth_alone/depth_val.txt

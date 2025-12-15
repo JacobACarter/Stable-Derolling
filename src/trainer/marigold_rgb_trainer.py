@@ -52,6 +52,7 @@ from src.util.metric import MetricTracker
 from src.util.multi_res_noise import multi_res_noise_like
 from src.util.alignment import align_rgb_least_square
 from src.util.seeding import generate_seed_sequence
+import pickle
 
 
 class MarigoldRGBTrainer:
@@ -87,6 +88,13 @@ class MarigoldRGBTrainer:
         if 8 != self.model.unet.config["in_channels"]:
             self._replace_unet_conv_in()
 
+        
+        # #From pretrained!!!
+        # model_path = "output/train_X4K_center/checkpoint/latest/unet/diffusion_pytorch_model.bin"
+        # print(f"Loading Model from: {model_path}")
+        # self.model.unet.load_state_dict(
+        #     torch.load(model_path, map_location=device)
+        # )
         # Encode empty text prompt
         self.model.encode_empty_text()
         self.empty_text_embed = self.model.empty_text_embed.detach().clone().to(device)
@@ -111,7 +119,7 @@ class MarigoldRGBTrainer:
         self.lr_scheduler = LambdaLR(optimizer=self.optimizer, lr_lambda=lr_func)
 
         # Loss
-        self.loss = get_loss(loss_name=self.cfg.loss.name, **self.cfg.loss.kwargs)
+        self.loss = get_loss(loss_name=self.cfg.loss.name, decoder=self.model.vae, **(self.cfg.loss.kwargs or {}))
 
         # Training noise scheduler
         self.training_noise_scheduler: DDPMScheduler = DDPMScheduler.from_pretrained(
@@ -122,6 +130,7 @@ class MarigoldRGBTrainer:
             )
         )
         self.prediction_type = self.training_noise_scheduler.config.prediction_type
+        # self.prediction_type = "sample"
         assert (
             self.prediction_type == self.model.scheduler.config.prediction_type
         ), "Different prediction types"
@@ -205,6 +214,7 @@ class MarigoldRGBTrainer:
         self.in_evaluation = True  # flag to do evaluation in resume run if validation is not finished
         _is_latest_saved = True
         # self.validate()
+        self.visualize()
         self.in_evaluation = False
         for epoch in range(self.epoch, self.max_epoch + 1):
             self.epoch = epoch
@@ -318,10 +328,35 @@ class MarigoldRGBTrainer:
                 #         target[valid_mask_down].float(),
                 #     )
                 # else:
-                latent_loss = self.loss(model_pred.float(), target.float())
+                # valid_mask = (global_base.sum(dim=1, keepdim=True) > 0).float()
+                # latent_mask = torch.nn.functional.avg_pool2d(valid_mask, kernel_size=8, stride=8)
+                # latent_mask = latent_mask.clamp(0, 1)
 
-                loss = latent_loss.mean()
-                print(loss)
+                # loss = ((model_pred - target) ** 2 * latent_mask).sum() / latent_mask.sum().clamp(min=1)
+                valid_mask_for_latent = (global_base.sum(dim=1, keepdim=True) > 0)  # [B, 1, H, W], True = valid
+                invalid_mask = ~valid_mask_for_latent
+
+                # Downsample to match latent resolution (VAE typically downsamples by 8x)
+                valid_mask_down = ~torch.max_pool2d(invalid_mask.float(), kernel_size=8, stride=8).bool()
+
+                # Repeat along latent channels (usually 4 for VAE latent)
+                valid_mask_down = valid_mask_down.repeat(1, model_pred.shape[1], 1, 1)
+
+                diff = (model_pred - target) ** 2  # MSE per element
+                masked_diff = diff * valid_mask_down.float()  # 0 out ignored pixels
+
+                # Compute mean only over valid pixels
+                num_valid = valid_mask_down.sum().clamp(min=1)  # avoid division by 0
+                loss = masked_diff.sum() / num_valid
+                # Apply masked loss
+                # latent_loss = self.loss(
+                #     model_pred[valid_mask_down].float(),
+                #     target[valid_mask_down].float()
+                # )
+                # latent_loss = self.loss(model_pred.float(), target.float())
+
+                # loss = latent_loss.mean()
+                # print(loss)
                 self.train_metrics.update("loss", loss.item())
 
                 loss = loss / self.gradient_accumulation_steps
@@ -436,7 +471,7 @@ class MarigoldRGBTrainer:
     def validate(self):
         for i, val_loader in enumerate(self.val_loaders):
             val_dataset_name = val_loader.dataset.disp_name
-
+            print(len(val_loader.dataset))
             val_metric_dic = self.validate_single_dataset(
                 data_loader=val_loader
             )
@@ -492,22 +527,33 @@ class MarigoldRGBTrainer:
 
     @torch.no_grad()
     def validate_single_dataset(self, data_loader, save_to_dir=None):
+        subset_size = 100
         self.model.to(self.device)
 
         # Define metric collection
         metrics = MetricCollection({
             "PSNR": PeakSignalNoiseRatio(data_range=1.0),
             "SSIM": StructuralSimilarityIndexMeasure(data_range=1.0),
-            "MSE" : MeanSquaredError()
+            "MSE": MeanSquaredError()
         }).to(self.device)
 
-        # Reset metrics
         metrics.reset()
 
-        for batch in tqdm(data_loader, desc=f"Validating on {data_loader.dataset.disp_name}"):
-            # Assuming batch size of 1
-            rolling_int = batch["rolling_int"].squeeze().to(self.device)  # [C, H, W]
-            global_int = batch["global_int"].squeeze().to(self.device)  # Ground truth
+        # Determine total and subset sizes
+        total_samples = len(data_loader.dataset)
+        subset_size = getattr(self.cfg.validation, "subset_size", 100)  # default to 100
+        subset_size = min(subset_size, total_samples)
+
+        # Randomly sample a new subset each validation call
+        subset_indices = np.random.choice(total_samples, subset_size, replace=False)
+
+        # --- Modified loop: iterate only over the chosen subset ---
+        pbar = tqdm(subset_indices, desc=f"Validating on {data_loader.dataset.disp_name}")
+        for idx in pbar:
+            batch = data_loader.dataset[idx]
+
+            rolling_int = batch["rolling_int"].squeeze().to(self.device)
+            global_int = batch["global_int"].squeeze().to(self.device)
 
             # Model inference
             pipe_out = self.model(
@@ -521,21 +567,20 @@ class MarigoldRGBTrainer:
             )
 
             global_pred = torch.from_numpy(pipe_out.global_np).to(self.device)
-            global_int = (global_int/255).float()
-            # print("Type Pred: " + str(global_pred.dtype))
-            # print("Type Glob: " + str(global_int.dtype))
-            # Update metrics
+            global_int = (global_int / 255).float()
+
             metrics.update(global_pred.unsqueeze(0), global_int.unsqueeze(0))
 
             # Optionally save predictions
             if save_to_dir is not None:
-                img_name = batch["global_relative_path"][0].replace("/", "_")
-                save_path = os.path.join(save_to_dir, f"{img_name}")
+                img_name = batch["global_relative_path"].replace("/", "_")
+                print(batch["global_relative_path"])
+                save_path = os.path.join(save_to_dir, f"{img_name}.png")
                 prediction_img = (global_pred.cpu().numpy() * 255).astype(np.uint8)
                 Image.fromarray(prediction_img.transpose(1, 2, 0), mode="RGB").save(save_path)
 
-        # Compute metrics
         return metrics.compute()
+
 
     def _get_next_seed(self):
         if 0 == len(self.global_seed_sequence):

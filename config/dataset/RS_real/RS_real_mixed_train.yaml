@@ -1,0 +1,16 @@
+dataset:
+  train:
+    name: mixed
+    prob_ls: [0.5, 0.5]
+    dataset_list: 
+    - name: deroll
+      disp_name: collocated
+      dir: 10-20-final.tar
+      filenames: data_split/Collocated/10-20/train_pairs.txt
+
+    - name: deroll
+      disp_name: collocated
+      dir: RS_real.tar
+      resize_to_hw: [300,300]
+      filenames: data_split/RS_real/RS_real_train.txt
+    

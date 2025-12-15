@@ -1,0 +1,6 @@
+dataset:
+  val:
+    - name: plane
+      disp_name: plane_val
+      dir: plane_separate.tar
+      filenames: data_split/plane_separate/plane_separate_split_all_val.txt

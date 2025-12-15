@@ -22,13 +22,14 @@ import argparse
 import logging
 import os
 from glob import glob
-
+import tarfile
 import numpy as np
 import torch
 from PIL import Image
 from tqdm.auto import tqdm
 from torch.nn import Conv2d
 from torch.nn.parameter import Parameter
+import io
 
 from marigold import MarigoldRGBPipeline
 
@@ -146,6 +147,11 @@ if "__main__" == __name__:
         action="store_true",
         help="Flag of running on Apple Silicon.",
     )
+    parser.add_argument(
+        "--file_list",
+        type=str,
+        default=None,
+    )
 
     os.environ["BASE_DATA_DIR"] = "../rolling-shutter-data"
     os.environ["BASE_CKPT_DIR"] = "../"
@@ -157,6 +163,10 @@ if "__main__" == __name__:
     checkpoint_path = args.checkpoint
     input_rgb_dir = args.input_rgb_dir
     output_dir = args.output_dir
+    file_list = args.file_list
+    using_file_list = False
+    if file_list != None:
+        using_file_list = True
 
     denoise_steps = args.denoise_steps
     ensemble_size = args.ensemble_size
@@ -206,10 +216,18 @@ if "__main__" == __name__:
     logging.info(f"device = {device}")
 
     # -------------------- Data --------------------
-    rgb_filename_list = glob(os.path.join(input_rgb_dir, "*"))
-    rgb_filename_list = [
-        f for f in rgb_filename_list if os.path.splitext(f)[1].lower() in EXTENSION_LIST
-    ]
+    rgb_filename_list = []
+    if using_file_list:
+        with open(file_list, 'r') as f:
+            for line in f:
+                parts = line.strip().split()
+                if parts:  # make sure the line is not empty
+                    rgb_filename_list.append(parts[1])
+    else:
+        rgb_filename_list = glob(os.path.join(input_rgb_dir, "**", "*"), recursive=True)
+        rgb_filename_list = [
+            f for f in rgb_filename_list if os.path.splitext(f)[1].lower() in EXTENSION_LIST
+        ]
     rgb_filename_list = sorted(rgb_filename_list)
     n_images = len(rgb_filename_list)
     if n_images > 0:
@@ -235,10 +253,9 @@ if "__main__" == __name__:
     if 8 != pipe.unet.config["in_channels"]:
         _replace_unet_conv_in(pipe)
 
-    model_path = "output/train_derolling_general_3/checkpoint/latest/unet/diffusion_pytorch_model.bin"
+    model_path = "output/train_collocated_10_20/checkpoint/latest/unet/diffusion_pytorch_model.bin"
     pipe.unet.load_state_dict(
         torch.load(model_path, map_location=device)
-
     )
     pipe.unet.to(device)
     logging.info(f"loaded unet parameters from {model_path}")
@@ -264,12 +281,23 @@ if "__main__" == __name__:
     )
 
     # -------------------- Inference and saving --------------------
-    with torch.no_grad():
+    # -------------------- Inference and saving --------------------
+    with torch.no_grad() and tarfile.open('../rolling-shutter-data/fan_5.tar') as tar:
         os.makedirs(output_dir, exist_ok=True)
+        members = {member.name: member for member in tar.getmembers()}
 
         for rgb_path in tqdm(rgb_filename_list, desc="Estimating depth", leave=True):
-            # Read input image
-            input_image = Image.open(rgb_path)
+            # Load input image (from file system or tar)
+            input_image = Image.open(rgb_path).convert('RGB')
+
+            # Center crop to 300x300
+            width, height = input_image.size
+            crop_size = 300
+            left = max((width - crop_size) // 2, 0)
+            upper = max((height - crop_size) // 2, 0)
+            right = left + crop_size
+            lower = upper + crop_size
+            input_image = input_image.crop((left, upper, right, lower))
 
             # Random number generator
             if seed is None:
@@ -303,14 +331,10 @@ if "__main__" == __name__:
             np.save(npy_save_path, global_pred)
 
             # Save as 16-bit uint png
-            print("Pred SIze: " + str(global_pred.shape))
             depth_to_save = (global_pred * 255).astype(np.uint8)
             png_save_path = os.path.join(output_dir_tif, f"{pred_name_base}.png")
             if os.path.exists(png_save_path):
                 logging.warning(f"Existing file: '{png_save_path}' will be overwritten")
-            arr = depth_to_save
-            arr = np.ascontiguousarray(arr.transpose(1,2,0))
+            arr = np.ascontiguousarray(depth_to_save.transpose(1,2,0))
             i = Image.fromarray(arr, mode="RGB")
-            print("Image size: " + str(i.size))
             i.save(png_save_path, mode="RGB")
-

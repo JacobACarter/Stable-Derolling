@@ -1,0 +1,6 @@
+dataset:
+  vis:
+  - name: Depth
+    disp_name: X4K_center_vis
+    dir: X4K_depth.tar
+    filenames: data_split/X4K_depth_alone/depth_vis.txt

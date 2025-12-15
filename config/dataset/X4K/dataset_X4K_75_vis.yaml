@@ -1,0 +1,6 @@
+dataset:
+  vis:
+  - name: deroll
+    disp_name: X4K_75_vis
+    dir: X4K_5.tar
+    filenames: data_split/X4K/X4K_split_0.75_vis.txt

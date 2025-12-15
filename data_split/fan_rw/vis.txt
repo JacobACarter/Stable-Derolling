@@ -1,0 +1,4 @@
+cropped_new/2025-09-09_09-33-10/camera2/frame66.png cropped_new/2025-09-09_09-33-10/camera2/frame66.png
+cropped_new/2025-09-09_09-35-10/camera2/frame73.png cropped_new/2025-09-09_09-35-10/camera2/frame73.png
+cropped_new/2025-09-09_09-40-44/camera2/frame136.png cropped_new/2025-09-09_09-40-44/camera2/frame136.png
+cropped_new/2025-09-09_09-37-44/camera2/frame149.png cropped_new/2025-09-09_09-37-44/camera2/frame149.png

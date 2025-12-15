@@ -1,0 +1,8 @@
+custom_anchor/RS/rs296.png custom_anchor/RS/rs296.png
+custom_anchor/RS/rs297.png custom_anchor/RS/rs297.png
+custom_anchor/RS/rs298.png custom_anchor/RS/rs298.png
+custom_anchor/RS/rs299.png custom_anchor/RS/rs299.png
+custom_anchor/RS/rs300.png custom_anchor/RS/rs300.png
+custom_anchor/RS/rs301.png custom_anchor/RS/rs301.png
+custom_anchor/RS/rs302.png custom_anchor/RS/rs302.png
+custom_anchor/RS/rs303.png custom_anchor/RS/rs303.png

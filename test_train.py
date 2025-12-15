@@ -16,7 +16,7 @@
 # limitations under the License.
 # --------------------------------------------------------------------------
 # If you find this code useful, we kindly ask you to cite our paper in your work.
-# Please find bibtex at: https://github.com/prs-eth/Marigold#-citation
+# Please find bibtex at: https://github.com/prs-eth/Marigold#-citatifon
 # More information about the method can be found at https://marigoldmonodepth.github.io
 # --------------------------------------------------------------------------
 
@@ -54,6 +54,31 @@ from src.util.logging_util import (
     tb_logger,
 )
 from src.util.slurm_util import get_local_scratch_dir, is_on_slurm
+import copy
+from torch.nn import Conv2d
+from torch.nn.parameter import Parameter
+
+
+def _replace_unet_conv_in(model):
+    # replace the first layer to accept 8 in_channels
+    _weight = model.unet.conv_in.weight.clone()  # [320, 4, 3, 3]
+    _bias = model.unet.conv_in.bias.clone()  # [320]
+    _weight = _weight.repeat((1, 2, 1, 1))  # Keep selected channel(s)
+    # half the activation magnitude
+    _weight *= 0.5
+    # new conv_in channel
+    _n_convin_out_channel = model.unet.conv_in.out_channels
+    _new_conv_in = Conv2d(
+        8, _n_convin_out_channel, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)
+    )
+    _new_conv_in.weight = Parameter(_weight)
+    _new_conv_in.bias = Parameter(_bias)
+    model.unet.conv_in = _new_conv_in
+    logging.info("Unet conv_in layer is replaced")
+    # replace config
+    model.unet.config["in_channels"] = 8
+    logging.info("Unet config is updated")
+    return
 
 if "__main__" == __name__:
 
@@ -110,6 +135,7 @@ if "__main__" == __name__:
 
     args = parser.parse_args()
     resume_run = args.resume_run
+    print(resume_run)
     output_dir = args.output_dir
     gpu_num = args.GPU
     base_data_dir = (
@@ -264,7 +290,7 @@ if "__main__" == __name__:
 
     # Training dataset
     transforms = v2.Compose([
-        v2.RandomResizedCrop(size=(224, 224), antialias=False),
+        v2.Resize(size=(300, 300)),
         v2.RandomHorizontalFlip(p=0.5),
     ])
 
@@ -310,6 +336,7 @@ if "__main__" == __name__:
             _val_dic,
             base_data_dir=base_data_dir,
             mode=DatasetMode.EVAL,
+            transforms= transforms,
         )
         _val_loader = DataLoader(
             dataset=_val_dataset,
@@ -335,12 +362,31 @@ if "__main__" == __name__:
             num_workers=cfg.dataloader.num_workers,
         )
         vis_loaders.append(_vis_loader)
-
+    print(f"Training samples: {len(train_loader.dataset)}"
+          f"\nValidation datasets: {[len(v.dataset) for v in val_loaders]}"
+            f"\nVisualization datasets: {[len(v.dataset) for v in vis_loaders]}")
     # -------------------- Model --------------------
     _pipeline_kwargs = cfg.pipeline.kwargs if cfg.pipeline.kwargs is not None else {}
     model = MarigoldRGBPipeline.from_pretrained(
-        os.path.join(base_ckpt_dir, cfg.model.pretrained_path), **_pipeline_kwargs
+        "../stable-diffusion-2"
     )
+    # if 8 != model.unet.config["in_channels"]:
+    #     _replace_unet_conv_in(model)
+
+    # model_path = "output/train_X4K_center_pca_16/checkpoint/latest/unet/diffusion_pytorch_model.bin"
+    # model.unet.load_state_dict(
+    #     torch.load(model_path, map_location=device)
+
+    # )
+    # state_dict = torch.load(model_path, map_location=device)
+    # missing, unexpected = model.unet.load_state_dict(state_dict, strict=False)
+    # print("Missing keys:", missing)
+    # print("Unexpected keys:", unexpected)
+
+    model.unet.to(device)
+    #From pretrained!!!
+    # model.unet.load_state_dict("output/train_X4K_center/checkpoint/latest/unet/diffusion_pytorch_model.bin")
+    # model = copy.deepcopy(model)
 
     # -------------------- Trainer --------------------
     # Exit time

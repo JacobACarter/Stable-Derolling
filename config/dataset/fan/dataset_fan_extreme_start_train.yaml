@@ -1,0 +1,6 @@
+dataset:
+  train:
+    name: deroll
+    disp_name: fan_train
+    dir: fan_extreme.tar
+    filenames: data_split/fan_extreme/fan_extreme_split_start_train.txt

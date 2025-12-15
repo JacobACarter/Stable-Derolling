@@ -1,0 +1,6 @@
+dataset:
+  vis:
+  - name: deroll
+    disp_name: fan_vis
+    dir: fan_extreme.tar
+    filenames: data_split/fan_extreme/fan_extreme_split_start_vis.txt

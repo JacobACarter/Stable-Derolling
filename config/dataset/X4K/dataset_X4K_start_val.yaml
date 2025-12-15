@@ -1,0 +1,6 @@
+dataset:
+  val:
+    - name: deroll
+      disp_name: X4K_start_val
+      dir: X4K.tar
+      filenames: data_split/X4K/X4K_split_start_val.txt

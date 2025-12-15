@@ -1,0 +1,6 @@
+dataset:
+  train:
+    name: deroll
+    disp_name: fan_train
+    dir: fan_cse.tar
+    filenames: data_split/fan_cse/fan_cse_split_center_train.txt

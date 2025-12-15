@@ -1,0 +1,6 @@
+dataset:
+  train:
+    name: DepthDeroll
+    disp_name: X4K_center_train
+    dir: X4K_depth.tar
+    filenames: data_split/X4K_depth/X4K_depth_split_0.5_train.txt

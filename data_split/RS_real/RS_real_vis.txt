@@ -1,0 +1,8 @@
+RS-Diffusion/test/rs/scene06_1172.jpg RS-Diffusion/test/rs/scene06_1172.jpg
+RS-Diffusion/test/rs/scene04_1033.jpg RS-Diffusion/test/rs/scene04_1033.jpg
+RS-Diffusion/test/rs/scene13_1670.jpg RS-Diffusion/test/rs/scene13_1670.jpg
+RS-Diffusion/test/rs/scene26_0164.jpg RS-Diffusion/test/rs/scene26_0164.jpg
+RS-Diffusion/test/rs/scene21_0656.jpg RS-Diffusion/test/rs/scene21_0656.jpg
+RS-Diffusion/test/rs/scene12_1359.jpg RS-Diffusion/test/rs/scene12_1359.jpg
+RS-Diffusion/test/rs/scene12_1392.jpg RS-Diffusion/test/rs/scene12_1392.jpg
+RS-Diffusion/test/rs/scene05_1761.jpg RS-Diffusion/test/rs/scene05_1761.jpg

@@ -1,0 +1,6 @@
+dataset:
+  vis:
+  - name: deroll
+    disp_name: plane_vis
+    dir: plane_300.tar
+    filenames: data_split/plane_300/plane_300_split_all_vis.txt

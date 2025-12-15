@@ -1,0 +1,6 @@
+dataset:
+  val:
+    - name: deroll
+      disp_name: heli_val
+      dir: helicopter.tar
+      filenames: data_split/helicopters/helicopter_split/helicopter_split_val.txt

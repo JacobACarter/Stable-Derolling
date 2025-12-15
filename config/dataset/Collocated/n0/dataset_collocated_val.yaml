@@ -1,0 +1,7 @@
+dataset:
+  val:
+    - name: deroll
+      disp_name: Collocated Val
+      dir: collocated_n0.tar
+      resize_to_hw: [300,300]
+      filenames: data_split/Collocated/n0/val_pairs.txt

@@ -1,0 +1,6 @@
+dataset:
+  vis:
+  - name: deroll
+    disp_name: fan_vis
+    dir: DataForJacob_TIGHT.tar
+    filenames: data_split/inpainted/vis_split.txt

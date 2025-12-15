@@ -1,0 +1,6 @@
+dataset:
+  val:
+    - name: plane
+      disp_name: plane_val
+      dir: plane_white.tar
+      filenames: data_split/plane_white/plane_white_split_center_val.txt

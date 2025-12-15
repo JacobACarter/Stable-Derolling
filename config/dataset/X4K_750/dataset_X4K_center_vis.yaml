@@ -1,0 +1,6 @@
+dataset:
+  vis:
+  - name: DepthDeroll
+    disp_name: X4K_center_vis
+    dir: X4K.tar
+    filenames: data_split/X4K/X4K_split_center_vis.txt

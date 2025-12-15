@@ -1,0 +1,9 @@
+plane_cs/test/GS/0000.png plane_cs/test/GS/0000.png
+plane_cs/test/RS0.05/CENTER/0000.png plane_cs/test/RS0.05/CENTER/0000.png
+plane_cs/test/RS0.075/CENTER/0000.png plane_cs/test/RS0.075/CENTER/0000.png
+plane_cs/test/RS0.1/CENTER/0000.png plane_cs/test/RS0.1/CENTER/0000.png
+plane_cs/test/RS0.15/CENTER/0000.png plane_cs/test/RS0.15/CENTER/0000.png
+plane_cs/test/RS0.2/CENTER/0000.png plane_cs/test/RS0.2/CENTER/0000.png
+plane_cs/test/RS0.3/CENTER/0000.png plane_cs/test/RS0.3/CENTER/0000.png
+plane_cs/test/RS0.4/CENTER/0000.png plane_cs/test/RS0.4/CENTER/0000.png
+plane_cs/test/RS0.5/CENTER/0000.png plane_cs/test/RS0.5/CENTER/0000.png
