@@ -85,7 +85,9 @@ export BASE_CKPT_DIR=YOUR_CHECKPOINT_DIR  # directory of pretrained checkpoint
 ```
 
 Download Stable Diffusion v2 [checkpoint](https://huggingface.co/stabilityai/stable-diffusion-2) into `${BASE_CKPT_DIR}`
-
+Download the datasets into '${BASE_DATA_DIR}': 
+[10-12](https://www.dropbox.com/scl/fi/ghzxygjij7u75awylcli3/10-12.tar?rlkey=78cddl1ogfdpnj0ca7cbdxyj0&st=8ambjjyp&dl=0) 
+[10-20](https://www.dropbox.com/scl/fi/xiu3ud3tnbbvna139nh7m/10-20-final.tar?rlkey=u8p9t1nq7zy49sia42a3k31ud&st=mjkod9dt&dl=0) 
 
 Run training script
 
